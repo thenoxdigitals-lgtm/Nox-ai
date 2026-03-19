@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nox AI – Pricing | thenoxdigital.com</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+      * { font-family: 'Poppins', sans-serif; }
+
+      .gradient-text {
+        background: linear-gradient(135deg, #0F52BA 0%, #14B8A6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .gradient-btn {
+        background: linear-gradient(135deg, #0F52BA 0%, #14B8A6 100%);
+        transition: all 0.3s ease;
+      }
+
+      .gradient-btn:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 18px 50px rgba(15, 82, 186, 0.35);
+      }
+
+      .gradient-btn:active {
+        transform: translateY(0) scale(0.98);
+        box-shadow: 0 8px 30px rgba(15, 82, 186, 0.25);
+      }
+
+      .btn-soft {
+        transition: all 0.25s ease;
+      }
+
+      .btn-soft:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(15, 82, 186, 0.12);
+      }
+
+      .nav-link {
+        position: relative;
+        transition: color 0.2s ease;
+      }
+
+      .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #0F52BA 0%, #14B8A6 100%);
+        transition: width 0.3s ease;
+      }
+
+      .nav-link:hover::after {
+        width: 100%;
+      }
+
+      .plan-card {
+        transition: all 0.3s ease;
+      }
+
+      .plan-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 18px 50px rgba(15, 82, 186, 0.12);
+      }
+
+      .plan-badge {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+      }
+
+      .input-field {
+        transition: all 0.3s ease;
+      }
+
+      .input-field:focus {
+        border-color: #0F52BA;
+        box-shadow: 0 0 0 3px rgba(15, 82, 186, 0.1);
+      }
+
+      body { box-sizing: border-box; }
+    </style>
+  </head>
+
+  <body class="h-full bg-white text-gray-800 overflow-auto">
+    <div class="w-full h-full">
+
+      <!-- NAVBAR -->
+      <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="flex items-center justify-between h-20">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 relative">
+                <img src="logo.png"
+                     alt="Nox AI logo"
+                     class="w-10 h-10 object-contain">
+              </div>
+              <div class="leading-tight">
+                <span class="text-xl font-semibold text-[#0B1F3A] tracking-tight">Nox AI</span>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400">thenoxdigital.com</p>
+              </div>
+            </div>
+
+            <div class="hidden md:flex items-center gap-8">
+              <a href="index.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Home</a>
+              <a href="generate.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Generate</a>
+              <a href="pricing.html" class="nav-link text-sm font-medium text-[#0B1F3A]">Pricing</a>
+              <a href="about.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">About</a>
+              <a href="signup.html"
+                 class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
+                Sign up
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+            </div>
+
+            <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100">
+          <div class="px-4 sm:px-6 py-4 space-y-3">
+            <a href="index.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">Home</a>
+            <a href="generate.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">Generate</a>
+            <a href="pricing.html" class="block text-sm font-medium text-[#0B1F3A] py-2">Pricing</a>
+            <a href="about.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">About</a>
+            <a href="signup.html"
+               class="gradient-btn block text-center px-6 py-2.5 text-sm font-medium text-white rounded-full mt-4">
+              Sign up
+            </a>
+          </div>
+        </div>
+      </nav>
+
+      <!-- PRICING HERO -->
+      <section class="pt-28 pb-16 bg-gradient-to-br from-gray-50 via-white to-blue-50/40">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="max-w-3xl">
+            <p class="plan-badge font-semibold text-[#0F52BA] uppercase mb-3">Pricing</p>
+            <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-[#0B1F3A] leading-tight mb-4">
+              Credit-based plans that scale with how much you build.
+            </h1>
+            <p class="text-gray-600 text-base md:text-lg max-w-2xl">
+              Each Nox credit equals one complete website generation. Choose how long you want to commit and unlock lower prices per generation on longer terms.
+            </p>
+          </div>
+
+          <div class="mt-6 inline-flex items-center gap-2 rounded-full bg-white border border-gray-100 px-2 py-1 text-xs text-gray-600">
+            <span class="px-2 py-1 rounded-full bg-[#0F52BA]/10 text-[#0F52BA] font-medium">Standard plan</span>
+            <span>300 credits every month · 1 credit = 1 full website</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- PLANS -->
+      <section class="pb-20 bg-gradient-to-b from-blue-50/40 via-white to-white">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="grid md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
+
+            <!-- 1 MONTH -->
+            <div class="plan-card bg-white border border-gray-100 rounded-3xl p-6 flex flex-col">
+              <div class="mb-4">
+                <p class="plan-badge text-gray-400 mb-1">MONTHLY</p>
+                <h2 class="text-xl font-semibold text-[#0B1F3A]">1 month access</h2>
+                <p class="text-xs text-gray-500 mt-1">Best if you want to test Nox for a short project.</p>
+              </div>
+
+              <div class="mb-4">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-bold text-[#0B1F3A]">₹1,299</span>
+                  <span class="text-xs text-gray-400 line-through">₹1,499</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Billed every month </p>
+              </div>
+
+              <ul class="text-sm text-gray-600 space-y-2 mb-6">
+                <li>• 300 Nox credits per month</li>
+                <li>• 1 credit = 1 complete website generation</li>
+                <li>• Best per‑month flexibility, higher per‑site price</li>
+                <li>• Email support</li>
+              </ul>
+
+              <div class="mt-auto">
+                <a href="signup.html"
+                   class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
+                  Get monthly plan
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- 12 MONTHS (HIGHLIGHTED) -->
+            <div class="plan-card bg-white border-2 border-[#0F52BA] rounded-3xl p-6 relative flex flex-col shadow-xl">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[#0F52BA] text-[11px] font-medium text-white shadow-md">
+                Most popular · Save vs monthly
+              </div>
+
+              <div class="mb-4 mt-2">
+                <p class="plan-badge text-gray-400 mb-1">12 MONTHS</p>
+                <h2 class="text-xl font-semibold text-[#0B1F3A]">12 months access</h2>
+                <p class="text-xs text-gray-500 mt-1">Ideal if you plan to build and iterate all year.</p>
+              </div>
+
+              <div class="mb-4">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-bold text-[#0B1F3A]">₹13,999</span>
+                  <span class="text-xs text-gray-400 line-through">₹17,988</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  Billed once per year · ≈ ₹1,167 / month 
+                </p>
+              </div>
+
+              <ul class="text-sm text-gray-600 space-y-2 mb-6">
+                <li>• 300 Nox credits every month (3,600 / year)</li>
+                <li>• Better per‑website price than monthly</li>
+                <li>• Priority support for billing & account issues</li>
+                <li>• Recommended for freelancers and agencies</li>
+              </ul>
+
+              <div class="mt-auto">
+                <a href="signup.html"
+                   class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
+                  Get yearly plan
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- 3 YEARS -->
+            <div class="plan-card bg-white border border-gray-100 rounded-3xl p-6 flex flex-col">
+              <div class="mb-4">
+                <p class="plan-badge text-gray-400 mb-1">3 YEARS</p>
+                <h2 class="text-xl font-semibold text-[#0B1F3A]">3 years access</h2>
+                <p class="text-xs text-gray-500 mt-1">Best long‑term value for heavy builders.</p>
+              </div>
+
+              <div class="mb-4">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-bold text-[#0B1F3A]">₹29,999</span>
+                  <span class="text-xs text-gray-400 line-through">₹53,964</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  Billed once every 3 years · ≈ ₹833 / month 
+                </p>
+              </div>
+
+              <ul class="text-sm text-gray-600 space-y-2 mb-6">
+                <li>• 300 Nox credits every month (10,800 / 3 years)</li>
+                <li>• Lowest per‑website price</li>
+                <li>• Priority support + roadmap input</li>
+                <li>• Best for agencies and long‑term projects</li>
+              </ul>
+
+              <div class="mt-auto">
+                <a href="signup.html"
+                   class="btn-soft w-full text-center px-4 py-2.5 text-sm font-medium text-[#0B1F3A] rounded-full border-2 border-gray-200 bg-white inline-flex items-center justify-center gap-2">
+                  Get 3‑year plan
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- SMALL NOTE ABOUT CREDITS -->
+          <div class="mt-10 max-w-3xl text-xs text-gray-500">
+            <p>
+              1 Nox credit = 1 full website generation (including structure, layout, and copy). Credits refresh every month while your plan is active. You can add extra credit packs in the future if you need more volume.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ / INFO -->
+      <section class="pb-16 bg-white">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="grid md:grid-cols-2 gap-10">
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold text-[#0B1F3A] mb-4">How pricing works</h2>
+              <p class="text-gray-600 mb-4 text-sm">
+                Nox AI uses a credit-based model. You pay for access (1 month, 12 months, or 3 years) and receive a monthly allowance of Nox credits. Each time you generate a full website, you spend 1 credit.
+              </p>
+              <p class="text-gray-600 text-sm">
+                This keeps your costs predictable while still giving you the flexibility to use more credits when you need them.
+              </p>
+            </div>
+            <div class="space-y-4 text-sm text-gray-600">
+              <div>
+                <h3 class="font-semibold text-[#0B1F3A] mb-1 text-sm">What happens if I run out of credits?</h3>
+                <p>If you hit 0 credits, you’ll be prompted to wait for your next monthly refresh or purchase additional credit packs (coming soon).</p>
+              </div>
+              <div>
+                <h3 class="font-semibold text-[#0B1F3A] mb-1 text-sm">Can I change plans later?</h3>
+                <p>You can upgrade from monthly to yearly or 3‑year plans in the future. Upgrades will prorate based on what you’ve already paid.</p>
+              </div>
+              <div>
+                <h3 class="font-semibold text-[#0B1F3A] mb-1 text-sm">Do credits roll over?</h3>
+                <p>For launch, unused credits do not roll over. This keeps the pricing simple. Rollover may be added later for higher tiers.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="bg-[#0B1F3A] text-white py-16">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="grid md:grid-cols-4 gap-12 mb-12">
+            <div class="md:col-span-2">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10">
+                  <img src="logo.png"
+                       alt="Nox AI logo"
+                       class="w-10 h-10 object-contain">
+                </div>
+                <span class="text-xl font-semibold">Nox AI</span>
+              </div>
+              <p class="text-gray-400 max-w-md mb-6">
+                Conversational AI that turns your ideas into Tailwind websites you can copy into any stack.
+              </p>
+            </div>
+
+            <div>
+              <h4 class="font-semibold mb-6">Pages</h4>
+              <ul class="space-y-3 text-sm">
+                <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
+                <li><a href="generate.html" class="text-gray-400 hover:text-white transition-colors">Generate</a></li>
+                <li><a href="pricing.html" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="about.html" class="text-gray-400 hover:text-white transition-colors">About</a></li>
+                <li><a href="signup.html" class="text-gray-400 hover:text-white transition-colors">Sign up</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 class="font-semibold mb-6">Contact</h4>
+              <ul class="space-y-3 text-sm text-gray-400">
+                <li>support@thenoxdigital.com</li>
+                <li>thenoxdigital.com</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="border-t border-white/10 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p class="text-gray-400 text-sm">© 2026 Nox AI. All rights reserved.</p>
+              <div class="flex gap-6 text-sm">
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+
+    <script>
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileMenu = document.getElementById('mobileMenu');
+
+      if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+        });
+      }
+
+      const nav = document.querySelector('nav');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+          nav.classList.add('shadow-md');
+        } else {
+          nav.classList.remove('shadow-md');
+        }
+      });
+    </script>
+  </body>
+</html>
