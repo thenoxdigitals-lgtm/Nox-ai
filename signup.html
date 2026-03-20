@@ -6,23 +6,31 @@
     <title>Nox AI – Sign up / Login | thenoxdigital.com</title>
 
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-6RP5M4N271"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RP5M4N271"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-6RP5M4N271');
+    </script>
 
-  gtag('config', 'G-6RP5M4N271');
-</script>
-<!-- Tailwind -->
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+      const supabaseUrl = 'https://ooyouwalbpvqdjvvtsjj.supabase.co';
+      const supabaseKey = 'sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Google Identity Services -->
+    <!-- Google Identity Services (for later Google login if you want) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
@@ -246,7 +254,7 @@
                   <div class="h-px flex-1 bg-gray-200"></div>
                 </div>
 
-                <!-- Google sign-up button -->
+                <!-- Google sign-up button (placeholder for later) -->
                 <button
                   type="button"
                   id="googleSignupBtn"
@@ -307,7 +315,7 @@
                   <div class="h-px flex-1 bg-gray-200"></div>
                 </div>
 
-                <!-- Google login button -->
+                <!-- Google login button (placeholder for later) -->
                 <button
                   type="button"
                   id="googleLoginBtn"
@@ -426,46 +434,71 @@
         `;
       });
 
-      // EMAIL/PASSWORD HANDLERS (placeholder)
-      signupForm.addEventListener('submit', (e) => {
+      // EMAIL/PASSWORD HANDLERS with Supabase
+      signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(signupForm);
-        const payload = {
-          name: formData.get('name'),
-          email: formData.get('email'),
-          password: formData.get('password'),
-        };
-        console.log('Sign up payload (send to backend):', payload);
-        // TODO: POST to your backend /api/auth/signup
-        alert('Sign up submitted (hook this to your backend).');
+        const fullName = formData.get('name');
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { full_name: fullName }
+            }
+          });
+
+          if (error) {
+            alert('Signup error: ' + error.message);
+            return;
+          }
+
+          // If you enable email confirmation, Supabase may send a verification email.
+          alert('Account created. Check your email to confirm (if required), then log in.');
+          // Optionally redirect to login tab:
+          tabLogin.click();
+        } catch (err) {
+          console.error(err);
+          alert('Unexpected error during signup.');
+        }
       });
 
-      loginForm.addEventListener('submit', (e) => {
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(loginForm);
-        const payload = {
-          email: formData.get('email'),
-          password: formData.get('password'),
-        };
-        console.log('Login payload (send to backend):', payload);
-        // TODO: POST to your backend /api/auth/login
-        alert('Login submitted (hook this to your backend).');
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (error) {
+            alert('Login error: ' + error.message);
+            return;
+          }
+
+          alert('Logged in successfully.');
+          // Redirect to profile or generate page:
+          window.location.href = 'profile.html'; // we will create this page next
+        } catch (err) {
+          console.error(err);
+          alert('Unexpected error during login.');
+        }
       });
 
-      // GOOGLE SIGN IN INTEGRATION (front-end)
-      // Replace this with your real Google client ID.
+      // GOOGLE SIGN IN PLACEHOLDER (not wired to Supabase yet)
       const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
 
       function handleCredentialResponse(response) {
         const idToken = response.credential;
         console.log('Google ID token:', idToken);
-        // TODO: send idToken to your backend:
-        // fetch('/api/auth/google', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ idToken }),
-        // }).then(...);
-        alert('Google sign-in successful (now send ID token to backend).');
+        alert('Google sign-in successful placeholder. (We will connect this to backend/Supabase later.)');
       }
 
       window.onload = () => {
