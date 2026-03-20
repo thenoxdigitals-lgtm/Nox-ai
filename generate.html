@@ -18,6 +18,14 @@
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+      const supabaseUrl = 'https://ooyouwalbpvqdjvvtsjj.supabase.co';
+      const supabaseKey = 'sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -134,13 +142,8 @@
               <a href="generate.html" class="nav-link text-sm font-medium text-[#0B1F3A]">Generate</a>
               <a href="pricing.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Pricing</a>
               <a href="about.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">About</a>
-              <a href="signup.html"
-                 class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
-                Sign up
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
+              <!-- Auth area -->
+              <div id="navAuth"></div>
             </div>
 
             <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600">
@@ -159,6 +162,7 @@
             <a href="pricing.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">Pricing</a>
             <a href="about.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">About</a>
             <a href="signup.html"
+               id="mobileSignupLink"
                class="gradient-btn block text-center px-6 py-2.5 text-sm font-medium text-white rounded-full mt-4">
               Sign up
             </a>
@@ -380,7 +384,7 @@
 
         wrapper.innerHTML = `
           <div class="max-w-[80%] rounded-2xl bg-[#0F52BA] px-4 py-2.5 text-sm text-white shadow">
-            ${text.replace(/\\\\\\\\n/g, '<br>')}
+            ${text.replace(/\\\\\\\\\\\\\\\\n/g, '<br>')}
           </div>
           <div class="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold text-[#0B1F3A]">
             You
@@ -427,8 +431,7 @@
         }
       }
 
-      // For now we remove generateMockHtml and related preview injection,
-      // so the chat only shows messages and you can wire your own API call here.
+      // Chat submit – still placeholder
       chatForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const prompt = userInput.value.trim();
@@ -438,7 +441,7 @@
         userInput.value = '';
         setLoadingState(true);
 
-        // TODO: call your backend / Perplexity API here, then:
+        // TODO: call your backend / Perplexity API here
         setTimeout(() => {
           appendBotMessage('Your generation logic will appear here once hooked to the API.');
           setLoadingState(false);
@@ -461,6 +464,47 @@
         } catch {
           copyCodeBtn.textContent = 'Failed';
           setTimeout(() => copyCodeBtn.textContent = 'Copy', 1200);
+        }
+      });
+
+      // AUTH-BASED UI for this page
+      document.addEventListener('DOMContentLoaded', async () => {
+        const navAuth = document.getElementById('navAuth');
+        const mobileSignupLink = document.getElementById('mobileSignupLink');
+
+        if (!navAuth) return;
+
+        const { data, error } = await supabase.auth.getUser();
+        const user = data?.user || null;
+
+        if (!user) {
+          // Not logged in → show Sign up in navbar
+          navAuth.innerHTML = `
+            <a href="signup.html"
+               class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
+              Sign up
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          `;
+          return;
+        }
+
+        // Logged in → navbar Profile button
+        const fullName = user.user_metadata?.full_name || 'Profile';
+        navAuth.innerHTML = `
+          <a href="profile.html"
+             class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg-white">
+            <span>${fullName.split(' ')[0]}</span>
+          </a>
+        `;
+
+        // Mobile: change Sign up -> Profile
+        if (mobileSignupLink) {
+          mobileSignupLink.textContent = 'Profile';
+          mobileSignupLink.href = 'profile.html';
         }
       });
     </script>
