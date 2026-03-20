@@ -6,22 +6,29 @@
     <title>Nox AI – Pricing | thenoxdigital.com</title>
 
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-6RP5M4N271"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RP5M4N271"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-6RP5M4N271');
+    </script>
 
-  gtag('config', 'G-6RP5M4N271');
-</script>
-
-<!-- Tailwind -->
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+      const supabaseUrl = 'https://ooyouwalbpvqdjvvtsjj.supabase.co';
+      const supabaseKey = 'sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    //fonts.googleapis.com">
+    //fonts.gstatic.com" crossorigin>
+    //fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
       * { font-family: 'Poppins', sans-serif; }
@@ -128,13 +135,8 @@
               <a href="generate.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Generate</a>
               <a href="pricing.html" class="nav-link text-sm font-medium text-[#0B1F3A]">Pricing</a>
               <a href="about.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">About</a>
-              <a href="signup.html"
-                 class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
-                Sign up
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
+              <!-- Auth area -->
+              <div id="navAuth"></div>
             </div>
 
             <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600">
@@ -153,6 +155,7 @@
             <a href="pricing.html" class="block text-sm font-medium text-[#0B1F3A] py-2">Pricing</a>
             <a href="about.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">About</a>
             <a href="signup.html"
+               id="mobileSignupLink"
                class="gradient-btn block text-center px-6 py-2.5 text-sm font-medium text-white rounded-full mt-4">
               Sign up
             </a>
@@ -201,15 +204,16 @@
                 <p class="text-xs text-gray-500 mt-1">Billed every month </p>
               </div>
 
-              <ul class="text-sm text-gray-600 space-y-2 mb-6">
-                <li>• 300 Nox credits per month</li>
-                <li>• 1 credit = 1 complete website generation</li>
-                <li>• Best per‑month flexibility, higher per‑site price</li>
-                <li>• Email support</li>
+              <ul class="text-sm text-gray-600 space-y-2 mb-6-6">
+                >• 300 Nox credits per month</l/li>
+                >• 1 credit = 1 complete website generation</l/li>
+                >• Best per‑month flexibility, higher per‑site price</l/li>
+                >• Email support</li>
               </ul>
 
               <div class="mt-auto">
                 <a href="signup.html"
+                   id="planMonthlyBtn"
                    class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
                   Get monthly plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,15 +246,16 @@
                 </p>
               </div>
 
-              <ul class="text-sm text-gray-600 space-y-2 mb-6">
-                <li>• 300 Nox credits every month (3,600 / year)</li>
-                <li>• Better per‑website price than monthly</li>
-                <li>• Priority support for billing & account issues</li>
-                <li>• Recommended for freelancers and agencies</li>
+              <ul class="text-sm text-gray-600 space-y-2 mb-6-6">
+                >• 300 Nox credits every month (3,600 / year)</l/li>
+                >• Better per‑website price than monthly</l/li>
+                >• Priority support for billing & account issues</l/li>
+                >• Recommended for freelancers and agencies</li>
               </ul>
 
               <div class="mt-auto">
                 <a href="signup.html"
+                   id="planYearlyBtn"
                    class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
                   Get yearly plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,15 +284,16 @@
                 </p>
               </div>
 
-              <ul class="text-sm text-gray-600 space-y-2 mb-6">
-                <li>• 300 Nox credits every month (10,800 / 3 years)</li>
-                <li>• Lowest per‑website price</li>
-                <li>• Priority support + roadmap input</li>
-                <li>• Best for agencies and long‑term projects</li>
+              <ul class="text-sm text-gray-600 space-y-2 mb-6-6">
+                >• 300 Nox credits every month (10,800 / 3 years)</l/li>
+                >• Lowest per‑website price</l/li>
+                >• Priority support + roadmap input</l/li>
+                >• Best for agencies and long‑term projects</li>
               </ul>
 
               <div class="mt-auto">
                 <a href="signup.html"
+                   id="planThreeYearBtn"
                    class="btn-soft w-full text-center px-4 py-2.5 text-sm font-medium text-[#0B1F3A] rounded-full border-2 border-gray-200 bg-white inline-flex items-center justify-center gap-2">
                   Get 3‑year plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,20 +366,20 @@
 
             <div>
               <h4 class="font-semibold mb-6">Pages</h4>
-              <ul class="space-y-3 text-sm">
-                <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
-                <li><a href="generate.html" class="text-gray-400 hover:text-white transition-colors">Generate</a></li>
-                <li><a href="pricing.html" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="about.html" class="text-gray-400 hover:text-white transition-colors">About</a></li>
-                <li><a href="signup.html" class="text-gray-400 hover:text-white transition-colors">Sign up</a></li>
+              <ul class="space-y-3 text-smsm">
+                ><a href="index.html" class="text-gray-400 hover:text-white transition-colors">Home</a></l/li>
+                ><a href="generate.html" class="text-gray-400 hover:text-white transition-colors">Generate</a></l/li>
+                ><a href="pricing.html" class="text-gray-400 hover:text-white transition-colors">Pricing</a></l/li>
+                ><a href="about.html" class="text-gray-400 hover:text-white transition-colors">About</a></l/li>
+                ><a href="signup.html" id="footerSignupLink" class="text-gray-400 hover:text-white transition-colors">Sign up</a></li>
               </ul>
             </div>
 
             <div>
               <h4 class="font-semibold mb-6">Contact</h4>
-              <ul class="space-y-3 text-sm text-gray-400">
-                <li>support@thenoxdigital.com</li>
-                <li>thenoxdigital.com</li>
+              <ul class="space-y-3 text-sm text-gray-40000">
+                >support@thenoxdigital.com</l/li>
+                >thenoxdigital.com</li>
               </ul>
             </div>
           </div>
@@ -408,6 +414,69 @@
           nav.classList.add('shadow-md');
         } else {
           nav.classList.remove('shadow-md');
+        }
+      });
+
+      // Auth-based UI
+      document.addEventListener('DOMContentLoaded', async () => {
+        const navAuth = document.getElementById('navAuth');
+        const mobileSignupLink = document.getElementById('mobileSignupLink');
+        const planMonthlyBtn = document.getElementById('planMonthlyBtn');
+        const planYearlyBtn = document.getElementById('planYearlyBtn');
+        const planThreeYearBtn = document.getElementById('planThreeYearBtn');
+        const footerSignupLink = document.getElementById('footerSignupLink');
+
+        if (!navAuth) return;
+
+        const { data, error } = await supabase.auth.getUser();
+        const user = data?.user || null;
+
+        if (!user) {
+          // Logged out – show Sign up in navbar
+          navAuth.innerHTML = `
+            <a href="signup.html"
+               class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
+              Sign up
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          `;
+          return;
+        }
+
+        // Logged in – navbar profile chip
+        const fullName = user.user_metadata?.full_name || 'Profi       <a href="profile.html"
+             class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg-white">
+            <span>${fullName.split(' ')[0]}</span>
+          </a>
+        `;
+
+        // Mobile: Sign up -> Profile
+        if (mobileSignupLink) {
+          mobileSignupLink.textContent = 'Profile';
+          mobileSignupLink.href = 'profile.html';
+        }
+
+        // Plan buttons: go to profile instead of signup
+        if (planMonthlyBtn) {
+          planMonthlyBtn.textContent = 'Manage plan';
+          planMonthlyBtn.href = 'profile.html';
+        }
+        if (planYearlyBtn) {
+          planYearlyBtn.textContent = 'Manage plan';
+          planYearlyBtn.href = 'profile.html';
+        }
+        if (planThreeYearBtn) {
+          planThreeYearBtn.textContent = 'Manage plan';
+          planThreeYearBtn.href = 'profile.html';
+        }
+
+        // Footer: Sign up -> Profile
+        if (footerSignupLink) {
+          footerSignupLink.textContent = 'Profile';
+          footerSignupLink.href = 'profile.html';
         }
       });
     </script>
