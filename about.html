@@ -6,21 +6,29 @@
     <title>About Nox AI – AI Wrapper Website Builder | thenoxdigital.com</title>
 
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-6RP5M4N271"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RP5M4N271"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-6RP5M4N271');
+    </script>
 
-  gtag('config', 'G-6RP5M4N271');
-</script>
-<!-- Tailwind -->
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+      const supabaseUrl = 'https://ooyouwalbpvqdjvvtsjj.supabase.co';
+      const supabaseKey = 'sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    //fonts.googleapis.com">
+    //fonts.gstatic.com" crossorigin>
+    //fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
       * { font-family: 'Poppins', sans-serif; }
@@ -122,12 +130,8 @@
               <a href="generate.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Generate</a>
               <a href="pricing.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Pricing</a>
               <a href="about.html" class="nav-link text-sm font-medium text-[#0B1F3A]">About</a>
-              <a href="signup.html" class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
-                Sign up
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
+              <!-- Auth: filled by JS -->
+              <div id="navAuth"></div>
             </div>
 
             <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600">
@@ -146,6 +150,7 @@
             <a href="pricing.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">Pricing</a>
             <a href="about.html" class="block text-sm font-medium text-[#0B1F3A] py-2">About</a>
             <a href="signup.html"
+               id="mobileSignupLink"
                class="gradient-btn block text-center px-6 py-2.5 text-sm font-medium text-white rounded-full mt-4">
               Sign up
             </a>
@@ -188,19 +193,19 @@
               <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 md:p-8">
                 <h3 class="text-lg font-semibold text-[#0B1F3A] mb-4">What Nox AI does</h3>
                 <ul class="space-y-3 text-sm text-gray-600">
-                  <li class="flex gap-3">
+                  >
                     <span class="mt-1 h-2 w-2 rounded-full bg-[#14B8A6]"></span>
                     <span>Transforms natural language prompts into complete website structures with headers, sections, and footers.</span>
                   </li>
-                  <li class="flex gap-3">
+                  >
                     <span class="mt-1 h-2 w-2 rounded-full bg-[#14B8A6]"></span>
                     <span>Generates editable HTML, CSS, and JavaScript so developers can integrate or customize instantly.</span>
                   </li>
-                  <li class="flex gap-3">
+                  >
                     <span class="mt-1 h-2 w-2 rounded-full bg-[#14B8A6]"></span>
                     <span>Removes friction for non‑technical users who want professional websites without writing code.</span>
                   </li>
-                  <li class="flex gap-3">
+                  >
                     <span class="mt-1 h-2 w-2 rounded-full bg-[#14B8A6]"></span>
                     <span>Speeds up prototyping for teams who need layouts and copy quickly to test ideas.</span>
                   </li>
@@ -233,19 +238,19 @@
             <div class="bg-gray-50 rounded-2xl p-6 md:p-8">
               <h3 class="text-lg font-semibold text-[#0B1F3A] mb-4">How the website generation flow works</h3>
               <ol class="space-y-4 text-sm text-gray-700">
-                <li>
+                >
                   <span class="font-semibold text-[#0F52BA]">1. Describe your site in plain language.</span>
                   <p class="mt-1 text-gray-600">Share the purpose, audience, style, and must‑have sections in the chat – no templates or form fields required.</p>
                 </li>
-                <li>
+                >
                   <span class="font-semibold text-[#0F52BA]">2. Nox asks only what’s missing.</span>
                   <p class="mt-1 text-gray-600">The AI follows up with focused questions about tone, layout style, or special components to complete the brief.</p>
                 </li>
-                <li>
+                >
                   <span class="font-semibold text-[#0F52BA]">3. A full layout is generated.</span>
                   <p class="mt-1 text-gray-600">Nox outputs a structured page with navigation, hero, content blocks, calls‑to‑action, forms, and footers aligned with your prompt.</p>
                 </li>
-                <li>
+                >
                   <span class="font-semibold text-[#0F52BA]">4. Clean code is ready to copy.</span>
                   <p class="mt-1 text-gray-600">You get frontend code that you can paste into existing projects, export, or edit to match your stack.</p>
                 </li>
@@ -357,10 +362,10 @@
             <div class="bg-white/10 border border-white/20 rounded-2xl p-6 md:p-8 backdrop-blur-sm">
               <h3 class="text-lg font-semibold mb-4">What’s next for Nox AI</h3>
               <ul class="space-y-3 text-sm text-white/85">
-                <li>Deeper chat‑based control over sections, components, and design tokens.</li>
-                <li>Richer multi‑page generation for full marketing sites and funnels.</li>
-                <li>Workflows for teams to collaborate on prompts, layouts, and versions.</li>
-                <li>More export options to fit different tech stacks and hosting setups.</li>
+                >Deeper chat‑based control over sections, components, and design tokens.</li>
+                >Richer multi‑page generation for full marketing sites and funnels.</li>
+                >Workflows for teams to collaborate on prompts, layouts, and versions.</li>
+                >More export options to fit different tech stacks and hosting setups.</li>
               </ul>
             </div>
           </div>
@@ -387,6 +392,7 @@
                 </svg>
               </a>
               <a href="signup.html"
+                 id="ctaSignupBtn"
                  class="btn-soft px-7 py-3 text-sm md:text-base text-[#0B1F3A] font-medium rounded-full border-2 border-gray-200 bg-white">
                 Create a free account
               </a>
@@ -416,19 +422,19 @@
             <div>
               <h4 class="font-semibold mb-6">Pages</h4>
               <ul class="space-y-3 text-sm">
-                <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
-                <li><a href="generate.html" class="text-gray-400 hover:text-white transition-colors">Generate</a></li>
-                <li><a href="pricing.html" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="about.html" class="text-gray-400 hover:text-white transition-colors">About</a></li>
-                <li><a href="signup.html" class="text-gray-400 hover:text-white transition-colors">Sign up</a></li>
+                ><a href="index.html" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
+                ><a href="generate.html" class="text-gray-400 hover:text-white transition-colors">Generate</a></li>
+                ><a href="pricing.html" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                ><a href="about.html" class="text-gray-400 hover:text-white transition-colors">About</a></li>
+                ><a href="signup.html" id="footerSignupLink" class="text-gray-400 hover:text-white transition-colors">Sign up</a></li>
               </ul>
             </div>
 
             <div>
               <h4 class="font-semibold mb-6">Contact</h4>
               <ul class="space-y-3 text-sm text-gray-400">
-                <li>support@thenoxdigital.com</li>
-                <li>thenoxdigital.com</li>
+                >support@thenoxdigital.com</li>
+                >thenoxdigital.com</li>
               </ul>
             </div>
           </div>
@@ -463,6 +469,59 @@
           nav.classList.add('shadow-md');
         } else {
           nav.classList.remove('shadow-md');
+        }
+      });
+
+      // Auth-based UI (same pattern as other pages)
+      document.addEventListener('DOMContentLoaded', async () => {
+        const navAuth = document.getElementById('navAuth');
+        const mobileSignupLink = document.getElementById('mobileSignupLink');
+        const ctaSignupBtn = document.getElementById('ctaSignupBtn');
+        const footerSignupLink = document.getElementById('footerSignupLink');
+
+        if (!navAuth) return;
+
+        const { data, error } = await supabase.auth.getUser();
+        const user = data?.user || null;
+
+        if (!user) {
+          // Logged out – keep Sign up / Create account
+          navAuth.innerHTML = `
+            <a href="signup.html" class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
+              Sign up
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          `;
+          return;
+        }
+
+        // Logged in – navbar profile chip
+        const fullName = user.user_metadata?.full_name || 'Profile';
+        navAuth.innerHTML = `
+          <a href="profile.html"
+             class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg-white">
+            <span>${fullName.split(' ')[0]}</span>
+          </a>
+        `;
+
+        // Mobile "Sign up" -> "Profile"
+        if (mobileSignupLink) {
+          mobileSignupLink.textContent = 'Profile';
+          mobileSignupLink.href = 'profile.html';
+        }
+
+        // CTA "Create a free account" -> "Go to profile"
+        if (ctaSignupBtn) {
+          ctaSignupBtn.textContent = 'Go to profile';
+          ctaSignupBtn.href = 'profile.html';
+        }
+
+        // Footer "Sign up" -> "Profile"
+        if (footerSignupLink) {
+          footerSignupLink.textContent = 'Profile';
+          footerSignupLink.href = 'profile.html';
         }
       });
     </script>
