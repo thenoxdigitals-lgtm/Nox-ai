@@ -17,6 +17,14 @@
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+      const supabaseUrl = 'https://ooyouwalbpvqdjvvtsjj.supabase.co';
+      const supabaseKey = 'sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -249,12 +257,8 @@
               <a href="generate.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Generate</a>
               <a href="pricing.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Pricing</a>
               <a href="about.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">About</a>
-              <a href="signup.html" class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
-                Sign up
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
+              <!-- Auth area will be filled by JS -->
+              <div id="navAuth"></div>
             </div>
 
             <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600">
@@ -273,6 +277,7 @@
             <a href="pricing.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">Pricing</a>
             <a href="about.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">About</a>
             <a href="signup.html"
+               id="mobileSignupLink"
                class="gradient-btn block text-center px-6 py-2.5 text-sm font-medium text-white rounded-full mt-4">
               Sign up
             </a>
@@ -303,7 +308,7 @@
               </h1>
 
               <p class="text-lg text-gray-600 max-w-xl fade-in-up delay-200">
-                Nox AI lets you build websites the way you talk: describe your brand, goals, and vibe in a chat, and it returns a production‑ready Tailwind layout with copy included.[web:220][web:243]
+                Nox AI lets you build websites the way you talk: describe your brand, goals, and vibe in a chat, and it returns a production‑ready Tailwind layout with copy included.[web:220]
               </p>
 
               <div class="flex flex-wrap gap-4 fade-in-up delay-300">
@@ -316,6 +321,7 @@
                   </svg>
                 </a>
                 <a href="signup.html"
+                   id="heroSignupBtn"
                    class="btn-soft px-8 py-4 text-[#0B1F3A] font-medium rounded-full border-2 border-gray-200 hover:border-[#0F52BA] bg-white inline-flex items-center gap-2">
                   Sign up to save projects
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,7 +407,7 @@
           <div class="text-center mb-12">
             <h2 class="text-3xl md:text-4xl font-bold text-[#0B1F3A] mb-4">How Nox AI builds your site</h2>
             <p class="text-gray-600 max-w-3xl mx-auto">
-              Instead of filling forms, you walk through a simple conversation. Nox keeps context and turns it into a full layout.[web:220][web:251]
+              Instead of filling forms, you walk through a simple conversation. Nox keeps context and turns it into a full layout.[web:220]
             </p>
           </div>
 
@@ -447,7 +453,7 @@
             </div>
             <h2 class="text-3xl md:text-4xl font-bold text-[#0B1F3A] mb-4">Templates powered by conversation</h2>
             <p class="text-gray-600">
-              Use Nox AI to spin up different website types: SaaS marketing pages, agency sites, and personal portfolios, all from the same chatbox.[web:253][web:249]
+              Use Nox AI to spin up different website types: SaaS marketing pages, agency sites, and personal portfolios, all from the same chatbox.[web:253]
             </p>
           </div>
 
@@ -542,6 +548,7 @@
                 </svg>
               </a>
               <a href="signup.html"
+                 id="ctaSignupBtn"
                  class="border border-white/60 text-white px-8 py-3 rounded-full font-medium inline-flex items-center gap-2 btn-soft">
                 Create a free account
               </a>
@@ -575,7 +582,7 @@
                 <li><a href="generate.html" class="text-gray-400 hover:text-white transition-colors">Generate</a></li>
                 <li><a href="pricing.html" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
                 <li><a href="about.html" class="text-gray-400 hover:text-white transition-colors">About</a></li>
-                <li><a href="signup.html" class="text-gray-400 hover:text-white transition-colors">Sign up</a></li>
+                <li><a href="signup.html" id="footerSignupLink" class="text-gray-400 hover:text-white transition-colors">Sign up</a></li>
               </ul>
             </div>
 
@@ -645,6 +652,65 @@
             el.classList.add('animate-in');
           });
         }, 1700);
+      });
+
+      // AUTH-BASED UI (swap Sign up ↔ Profile)
+      document.addEventListener('DOMContentLoaded', async () => {
+        const navAuth = document.getElementById('navAuth');
+        const heroSignupBtn = document.getElementById('heroSignupBtn');
+        const ctaSignupBtn = document.getElementById('ctaSignupBtn');
+        const mobileSignupLink = document.getElementById('mobileSignupLink');
+        const footerSignupLink = document.getElementById('footerSignupLink');
+
+        if (!navAuth) return;
+
+        const { data, error } = await supabase.auth.getUser();
+        const user = data?.user || null;
+
+        if (!user) {
+          // Not logged in → show Sign up in navbar
+          navAuth.innerHTML = `
+            <a href="signup.html" class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
+              Sign up
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          `;
+          // Keep all other Sign up links as-is
+          return;
+        }
+
+        // Logged in → navbar Profile button instead of Sign up
+        const fullName = user.user_metadata?.full_name || 'Profile';
+        navAuth.innerHTML = `
+          <a href="profile.html"
+             class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg-white">
+            <span>${fullName.split(' ')[0]}</span>
+          </a>
+        `;
+
+        // Hide/convert other Sign up CTAs
+        if (heroSignupBtn) {
+          heroSignupBtn.textContent = 'View your profile';
+          heroSignupBtn.href = 'profile.html';
+        }
+
+        if (ctaSignupBtn) {
+          ctaSignupBtn.textContent = 'Go to your profile';
+          ctaSignupBtn.href = 'profile.html';
+        }
+
+        if (mobileSignupLink) {
+          mobileSignupLink.textContent = 'Profile';
+          mobileSignupLink.href = 'profile.html';
+        }
+
+        if (footerSignupLink) {
+          footerSignupLink.textContent = 'Profile';
+          footerSignupLink.href = 'profile.html';
+        }
       });
     </script>
   </body>
