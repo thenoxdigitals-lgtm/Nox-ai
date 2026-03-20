@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Google Identity Services (for later Google login if you want) -->
+    <!-- Google Identity Services (optional, kept for future use) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
@@ -133,13 +133,8 @@
               <a href="generate.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Generate</a>
               <a href="pricing.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Pricing</a>
               <a href="about.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">About</a>
-              <a href="signup.html"
-                 class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
-                Sign up
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
+              <!-- Auth area -->
+              <div id="navAuth"></div>
             </div>
 
             <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600">
@@ -158,6 +153,7 @@
             <a href="pricing.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">Pricing</a>
             <a href="about.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">About</a>
             <a href="signup.html"
+               id="mobileSignupLink"
                class="gradient-btn block text-center px-6 py-2.5 text-sm font-medium text-white rounded-full mt-4">
               Sign up
             </a>
@@ -254,7 +250,7 @@
                   <div class="h-px flex-1 bg-gray-200"></div>
                 </div>
 
-                <!-- Google sign-up button (placeholder for later) -->
+                <!-- Google sign-up button -->
                 <button
                   type="button"
                   id="googleSignupBtn"
@@ -315,7 +311,7 @@
                   <div class="h-px flex-1 bg-gray-200"></div>
                 </div>
 
-                <!-- Google login button (placeholder for later) -->
+                <!-- Google login button -->
                 <button
                   type="button"
                   id="googleLoginBtn"
@@ -434,7 +430,7 @@
         `;
       });
 
-      // EMAIL/PASSWORD HANDLERS with Supabase
+      // AUTH HANDLERS (Supabase)
       signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(signupForm);
@@ -447,22 +443,24 @@
             email,
             password,
             options: {
-              data: { full_name: fullName }
+              data: {
+                full_name: fullName
+              }
             }
-          });
+          }); // [web:594]
 
           if (error) {
-            alert('Signup error: ' + error.message);
+            alert(error.message || 'Could not sign up.');
             return;
           }
 
-          // If you enable email confirmation, Supabase may send a verification email.
-          alert('Account created. Check your email to confirm (if required), then log in.');
-          // Optionally redirect to login tab:
-          tabLogin.click();
+          // If email confirmation is on, user may need to confirm before session exists.
+          alert('Account created. Check your email to confirm, then you will be able to log in.');
+          // Optionally redirect:
+          // window.location.href = 'profile.html';
         } catch (err) {
           console.error(err);
-          alert('Unexpected error during signup.');
+          alert('Unexpected error during sign up.');
         }
       });
 
@@ -476,53 +474,86 @@
           const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
-          });
+          }); // [web:591]
 
           if (error) {
-            alert('Login error: ' + error.message);
+            alert(error.message || 'Could not log in.');
             return;
           }
 
-          alert('Logged in successfully.');
-          // Redirect to profile or generate page:
-          window.location.href = 'profile.html'; // we will create this page next
+          // Successful login -> go to profile/dashboard
+          window.location.href = 'profile.html';
         } catch (err) {
           console.error(err);
           alert('Unexpected error during login.');
         }
       });
 
-      // GOOGLE SIGN IN PLACEHOLDER (not wired to Supabase yet)
-      const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
-
-      function handleCredentialResponse(response) {
-        const idToken = response.credential;
-        console.log('Google ID token:', idToken);
-        alert('Google sign-in successful placeholder. (We will connect this to backend/Supabase later.)');
-      }
-
-      window.onload = () => {
-        if (window.google && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID') {
-          google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleCredentialResponse,
-          });
-        }
-      };
-
+      // GOOGLE SIGN IN WITH SUPABASE OAUTH
       const googleSignupBtn = document.getElementById('googleSignupBtn');
       const googleLoginBtn = document.getElementById('googleLoginBtn');
 
-      function promptGoogle() {
-        if (!window.google || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
-          alert('Google Sign-In is not configured yet. Add your Google Client ID in the code.');
-          return;
+      async function signInWithGoogle() {
+        try {
+          const redirectUrl = window.location.origin + '/profile.html';
+          const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: redirectUrl,
+            },
+          }); // [web:597][web:624]
+
+          if (error) {
+            alert(error.message || 'Google sign-in failed.');
+          }
+          // Redirect handled by Supabase (page will navigate to Google then back).
+        } catch (err) {
+          console.error(err);
+          alert('Unexpected error during Google sign-in.');
         }
-        google.accounts.id.prompt();
       }
 
-      googleSignupBtn.addEventListener('click', promptGoogle);
-      googleLoginBtn.addEventListener('click', promptGoogle);
+      googleSignupBtn.addEventListener('click', signInWithGoogle);
+      googleLoginBtn.addEventListener('click', signInWithGoogle);
+
+      // Navbar auth state (same pattern as other pages)
+      document.addEventListener('DOMContentLoaded', async () => {
+        const navAuth = document.getElementById('navAuth');
+        const mobileSignupLink = document.getElementById('mobileSignupLink');
+
+        if (!navAuth) return;
+
+        const { data, error } = await supabase.auth.getUser();
+        const user = data?.user || null;
+
+        if (!user) {
+          // Logged out
+          navAuth.innerHTML = `
+            <a href="signup.html"
+               class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
+              Sign up
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          `;
+          return;
+        }
+
+        const fullName = user.user_metadata?.full_name || 'Profile';
+        navAuth.innerHTML = `
+          <a href="profile.html"
+             class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg-white">
+            <span>${fullName.split(' ')[0]}</span>
+          </a>
+        `;
+
+        if (mobileSignupLink) {
+          mobileSignupLink.textContent = 'Profile';
+          mobileSignupLink.href = 'profile.html';
+        }
+      });
     </script>
   </body>
 </html>
