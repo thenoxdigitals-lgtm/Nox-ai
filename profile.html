@@ -17,6 +17,14 @@
 <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+      const supabaseUrl = 'https://ooyouwalbpvqdjvvtsjj.supabase.co';
+      const supabaseKey = 'sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4';
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -218,7 +226,7 @@
       </footer>
     </div>
 
-    <!-- Logout modal (same snippet as other pages) -->
+    <!-- Logout modal -->
     <div id="logoutModal"
          class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
       <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6">
@@ -260,22 +268,86 @@
         }
       });
 
-      // Extra: profile page logout button uses same modal
-      document.addEventListener('DOMContentLoaded', () => {
+      // PROFILE LOGIC WITH SUPABASE
+      document.addEventListener('DOMContentLoaded', async () => {
+        const profileNameEl = document.getElementById('profileName');
+        const profileEmailEl = document.getElementById('profileEmail');
+        const profileInitialsEl = document.getElementById('profileInitials');
+        const navAuth = document.getElementById('navAuth');
+
+        // 1) Check current user
+        const { data, error } = await supabase.auth.getUser();
+        const user = data?.user || null;
+
+        if (!user) {
+          // Not logged in → send back to signup/login
+          window.location.href = 'signup.html';
+          return;
+        }
+
+        // 2) Fill profile info from user metadata / email
+        const fullName = user.user_metadata?.full_name || 'Nox user';
+        const email = user.email || 'email not set';
+
+        profileNameEl.textContent = fullName;
+        profileEmailEl.textContent = email;
+        profileInitialsEl.textContent = fullName
+          .split(' ')
+          .map(part => part[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2);
+
+        // 3) Render nav auth area (Profile + Logout)
+        if (navAuth) {
+          navAuth.innerHTML = `
+            <a href="profile.html"
+               class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg-white">
+              <span>${fullName.split(' ')[0]}</span>
+            </a>
+          `;
+        }
+
+        // 4) Logout modal logic using Supabase
         const profileLogoutBtn = document.getElementById('logoutBtnProfile');
-        const logoutBtnMain = document.getElementById('logoutBtn'); // from nav (rendered by auth.js)
+        const logoutModal = document.getElementById('logoutModal');
+        const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+        const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+
+        function openLogoutModal() {
+          if (!logoutModal) return;
+          logoutModal.classList.remove('hidden');
+          logoutModal.classList.add('flex');
+        }
+
+        function closeLogoutModal() {
+          if (!logoutModal) return;
+          logoutModal.classList.add('hidden');
+          logoutModal.classList.remove('flex');
+        }
 
         if (profileLogoutBtn) {
-          profileLogoutBtn.addEventListener('click', () => {
-            const modal = document.getElementById('logoutModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+          profileLogoutBtn.addEventListener('click', openLogoutModal);
+        }
+        if (cancelLogoutBtn) {
+          cancelLogoutBtn.addEventListener('click', closeLogoutModal);
+        }
+
+        if (confirmLogoutBtn) {
+          confirmLogoutBtn.addEventListener('click', async () => {
+            const { error: signOutError } = await supabase.auth.signOut();
+            if (signOutError) {
+              alert('Error logging out: ' + signOutError.message);
+              return;
+            }
+            closeLogoutModal();
+            window.location.href = 'signup.html';
           });
         }
       });
     </script>
 
-    <!-- Shared auth logic -->
+    <!-- Shared auth logic (if you still need it for other pages) -->
     <script src="auth.js"></script>
   </body>
 </html>
