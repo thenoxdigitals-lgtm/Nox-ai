@@ -18,9 +18,9 @@
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 
     <!-- Fonts -->
-    //fonts.googleapis.com">
-    //fonts.gstatic.com" crossorigin>
-    //fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
       * { font-family: 'Poppins', sans-serif; }
@@ -297,7 +297,7 @@
                 </div>
                 <div class="relative">
                   <pre class="code-scroll overflow-x-auto text-[11px] leading-relaxed bg-gray-50 px-4 py-3 text-gray-900">
-de id="codeOutput">
+<code id="codeOutput">
 <!-- Code will appear here after you describe a website. -->
 </code>
                   </pre>
@@ -345,12 +345,17 @@ de id="codeOutput">
     <script>
       const SUPABASE_URL = "https://ooyouwalbpvqdjvvtsjj.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4";
-      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); // [web:56]
+
+      let currentUser = null;
+      let currentCredits = null;
 
       async function refreshAuthUI() {
         try {
-          const { data } = await supabaseClient.auth.getUser();
+          const { data } = await supabaseClient.auth.getUser(); // [web:48]
           const user = data.user;
+          currentUser = user;
+
           const navSignupBtn = document.getElementById('navSignupBtn');
 
           if (navSignupBtn) {
@@ -362,9 +367,71 @@ de id="codeOutput">
               navSignupBtn.href = "signup.html";
             }
           }
+
+          if (user) {
+            await loadUserCredits(user.id);
+          }
         } catch (e) {
           console.error("Error checking auth state", e);
         }
+      }
+
+      async function loadUserCredits(userId) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('profiles')
+            .select('credits_remaining')
+            .eq('id', userId)
+            .single(); // [web:129]
+
+          if (error) {
+            console.warn('Could not load credits:', error.message);
+            currentCredits = null;
+          } else {
+            currentCredits = data.credits_remaining ?? 0;
+          }
+        } catch (e) {
+          console.error('loadUserCredits error', e);
+          currentCredits = null;
+        }
+      }
+
+      async function consumeCredit() {
+        if (!currentUser) return { ok: false, reason: 'not_logged_in' };
+        if (currentCredits === null) await loadUserCredits(currentUser.id);
+        if ((currentCredits ?? 0) <= 0) return { ok: false, reason: 'no_credits' };
+
+        // Decrement credits and increment websites_generated atomically
+        const { data, error } = await supabaseClient.rpc('consume_credit_and_increment', {}); // optional RPC
+
+        if (error) {
+          console.error('RPC not configured, falling back to simple update:', error.message);
+
+          // simple update fallback: credits_remaining = credits_remaining - 1, websites_generated = websites_generated + 1
+          const { error: updError, data: updData } = await supabaseClient
+            .from('profiles')
+            .update({
+              credits_remaining: currentCredits - 1,
+              websites_generated: supabaseClient.rpc ? undefined : undefined
+            })
+            .eq('id', currentUser.id)
+            .select('credits_remaining')
+            .single();
+
+          if (updError) {
+            console.error('Update credits error', updError);
+            return { ok: false, reason: 'update_failed' };
+          }
+
+          currentCredits = updData.credits_remaining ?? (currentCredits - 1);
+          return { ok: true };
+        }
+
+        // If you implement the RPC, update local credits from its result
+        if (data && typeof data.credits_remaining === 'number') {
+          currentCredits = data.credits_remaining;
+        }
+        return { ok: true };
       }
 
       // basic layout interactions
@@ -459,7 +526,7 @@ de id="codeOutput">
         if (loading) {
           sendIcon.innerHTML = `
             <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              ircle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor"
                 d="M4 12a8 8 0 018-8v4l3.536-3.536A8.001 8.001 0 014 12z"></path>
             </svg>
@@ -493,7 +560,6 @@ de id="codeOutput">
         const blob = new Blob([latestGeneratedHtml], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
-        // Optionally revoke later: setTimeout(() => URL.revokeObjectURL(url), 10000);
       });
 
       chatForm.addEventListener('submit', async (e) => {
@@ -501,23 +567,33 @@ de id="codeOutput">
         const prompt = userInput.value.trim();
         if (!prompt) return;
 
+        // Guard: must be logged in and have credits
+        if (!currentUser) {
+          appendBotMessage("You need to sign in before generating websites. Please sign up or log in first.");
+          return;
+        }
+
+        if (currentCredits === null) {
+          await loadUserCredits(currentUser.id);
+        }
+        if ((currentCredits ?? 0) <= 0) {
+          appendBotMessage("You have no credits remaining. Please upgrade your plan or wait for your next billing cycle.");
+          return;
+        }
+
         appendUserMessage(prompt);
         userInput.value = '';
         setLoadingState(true);
 
         try {
-          // TODO: replace this with real call to your backend / AI API
-          // Example: const res = await fetch('/api/generate', { method: 'POST', body: JSON.stringify({ prompt }) });
-          // const data = await res.json(); const html = data.html;
-
-          // Temporary fake HTML for testing:
+          // TODO: replace this fake HTML with a real API call
           const fakeHtml = `
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Generated by Nox</title>
-    //cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   </head>
   <body class="bg-gray-50 text-gray-800">
     <main class="min-h-screen flex items-center justify-center">
@@ -532,6 +608,18 @@ de id="codeOutput">
   </body>
 </html>
 `.trim();
+
+          // Consume one credit
+          const consumeResult = await consumeCredit();
+          if (!consumeResult.ok) {
+            if (consumeResult.reason === 'no_credits') {
+              appendBotMessage("You have no credits remaining. Please upgrade your plan.");
+            } else {
+              appendBotMessage("There was a problem updating your credits. Please try again.");
+            }
+            setLoadingState(false);
+            return;
+          }
 
           appendBotMessage("Here’s your generated layout. You can view it in the preview or open it as a full page using the button on the right.");
           setPreviewHtml(fakeHtml);
