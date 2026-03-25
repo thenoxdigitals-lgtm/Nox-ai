@@ -233,7 +233,7 @@
                     <p class="text-gray-800">
                       Hi, I’m Nox. Describe the website you want to build and I’ll generate a layout and HTML for you.
                     </p>
-                    <p class="mt-2 text-[11px] text-gray-500">
+                    <p class="text-[11px] text-gray-500 mt-2">
                       Example: “A modern landing page for a SaaS tool with hero, features, pricing, and FAQ.”
                     </p>
                   </div>
@@ -401,36 +401,22 @@
         if (currentCredits === null) await loadUserCredits(currentUser.id);
         if ((currentCredits ?? 0) <= 0) return { ok: false, reason: 'no_credits' };
 
-        // Decrement credits and increment websites_generated atomically
-        const { data, error } = await supabaseClient.rpc('consume_credit_and_increment', {}); // optional RPC
+        const { data, error } = await supabaseClient
+          .rpc('consume_credit_and_increment'); // [web:149][web:156]
 
         if (error) {
-          console.error('RPC not configured, falling back to simple update:', error.message);
-
-          // simple update fallback: credits_remaining = credits_remaining - 1, websites_generated = websites_generated + 1
-          const { error: updError, data: updData } = await supabaseClient
-            .from('profiles')
-            .update({
-              credits_remaining: currentCredits - 1,
-              websites_generated: supabaseClient.rpc ? undefined : undefined
-            })
-            .eq('id', currentUser.id)
-            .select('credits_remaining')
-            .single();
-
-          if (updError) {
-            console.error('Update credits error', updError);
-            return { ok: false, reason: 'update_failed' };
+          console.error('consume_credit_and_increment error', error);
+          if (error.message && error.message.includes('No credits remaining')) {
+            currentCredits = 0;
+            return { ok: false, reason: 'no_credits' };
           }
-
-          currentCredits = updData.credits_remaining ?? (currentCredits - 1);
-          return { ok: true };
+          return { ok: false, reason: 'rpc_failed' };
         }
 
-        // If you implement the RPC, update local credits from its result
-        if (data && typeof data.credits_remaining === 'number') {
-          currentCredits = data.credits_remaining;
+        if (data && data.length > 0) {
+          currentCredits = data[0].credits_remaining ?? currentCredits;
         }
+
         return { ok: true };
       }
 
@@ -492,7 +478,7 @@
 
         wrapper.innerHTML = `
           <div class="max-w-[80%] rounded-2xl bg-[#0F52BA] px-4 py-2.5 text-sm text-white shadow">
-            ${text.replace(/\\\\n/g, '<br>')}
+            ${text.replace(/\\\\\\\\n/g, '<br>')}
           </div>
           <div class="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold text-[#0B1F3A]">
             You
@@ -542,12 +528,9 @@
       function setPreviewHtml(html) {
         latestGeneratedHtml = html;
 
-        // update code view
         codeOutput.textContent = html.trim();
-        // enable "View website" button
         viewWebsiteBtn.disabled = !html.trim();
 
-        // write into iframe
         const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
         doc.open();
         doc.write(html);
@@ -567,7 +550,6 @@
         const prompt = userInput.value.trim();
         if (!prompt) return;
 
-        // Guard: must be logged in and have credits
         if (!currentUser) {
           appendBotMessage("You need to sign in before generating websites. Please sign up or log in first.");
           return;
@@ -586,7 +568,6 @@
         setLoadingState(true);
 
         try {
-          // TODO: replace this fake HTML with a real API call
           const fakeHtml = `
 <!doctype html>
 <html lang="en">
@@ -609,7 +590,6 @@
 </html>
 `.trim();
 
-          // Consume one credit
           const consumeResult = await consumeCredit();
           if (!consumeResult.ok) {
             if (consumeResult.reason === 'no_credits') {
