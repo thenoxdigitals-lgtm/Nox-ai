@@ -209,14 +209,16 @@
               </ul>
 
               <div class="mt-auto">
-                <a href="signup.html"
-                   class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onclick="startCheckout('plan_SVRRQoK3FvsFY2')"
+                  class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
                   Get monthly plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
-                </a>
+                </button>
               </div>
             </div>
 
@@ -250,14 +252,16 @@
               </ul>
 
               <div class="mt-auto">
-                <a href="signup.html"
-                   class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onclick="startCheckout('plan_SVRSPwR7DTzHEH')"
+                  class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
                   Get yearly plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
-                </a>
+                </button>
               </div>
             </div>
 
@@ -287,14 +291,16 @@
               </ul>
 
               <div class="mt-auto">
-                <a href="signup.html"
-                   class="btn-soft w-full text-center px-4 py-2.5 text-sm font-medium text-[#0B1F3A] rounded-full border-2 border-gray-200 bg-white inline-flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onclick="startCheckout('plan_SVRTWBZ5tiA87t')"
+                  class="btn-soft w-full text-center px-4 py-2.5 text-sm font-medium text-[#0B1F3A] rounded-full border-2 border-gray-200 bg-white inline-flex items-center justify-center gap-2">
                   Get 3‑year plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9 5l7 7-7 7" />
                   </svg>
-                </a>
+                </button>
               </div>
             </div>
 
@@ -392,6 +398,9 @@
 
     </div>
 
+    <!-- Razorpay Checkout script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <!-- Supabase JS -->
     <script src="https://unpkg.com/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
     <script>
@@ -440,6 +449,55 @@
       window.addEventListener('load', () => {
         refreshAuthUI();
       });
+
+      // === Razorpay subscription start ===
+      async function startCheckout(planId) {
+        try {
+          // get current Supabase user id (optional but recommended)
+          const { data } = await supabaseClient.auth.getUser();
+          const user = data.user;
+
+          const res = await fetch("https://YOUR_BACKEND_DOMAIN.com/create-subscription", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              plan_id: planId,
+              supabase_user_id: user ? user.id : null
+            })
+          });
+
+          const json = await res.json();
+          if (!res.ok) {
+            alert(json.error || "Something went wrong. Please try again.");
+            return;
+          }
+
+          const options = {
+            key: "RAZORPAY_KEY_ID", // replace with your live key
+            subscription_id: json.subscription_id,
+            name: "Nox AI",
+            description: json.description || "Nox AI subscription",
+            currency: json.currency || "INR",
+            notes: {
+              supabase_user_id: user ? user.id : ""
+            },
+            handler: function (response) {
+              // Optional: hit your backend to verify payment
+              // using response.razorpay_payment_id etc.
+            },
+            prefill: {
+              email: user ? user.email : ""
+            }
+          };
+
+          const rzp = new Razorpay(options);
+          rzp.open();
+        } catch (err) {
+          console.error(err);
+          alert("Unable to start checkout. Please try again.");
+        }
+      }
+      // === Razorpay subscription end ===
     </script>
   </body>
 </html>
