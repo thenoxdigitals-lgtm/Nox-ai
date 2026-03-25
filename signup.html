@@ -343,17 +343,7 @@
       </footer>
     </div>
 
-        <!-- Supabase JS (put before your custom script) -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <script>
-      // SUPABASE CONFIG – put your real values here
-      const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
-      const SUPABASE_ANON_KEY = 'YOUR_PUBLIC_ANON_KEY';
-
-      // Create a single Supabase client (only once)
-      const supabase = supabasejs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
       // NAV + MOBILE
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
       const mobileMenu = document.getElementById('mobileMenu');
@@ -436,71 +426,45 @@
         `;
       });
 
-      // SIGNUP – Supabase email/password
-      signupForm.addEventListener('submit', async (e) => {
+      // EMAIL/PASSWORD HANDLERS (placeholder)
+      signupForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const formData = new FormData(signupForm);
-        const name = formData.get('name');
-        const email = formData.get('email');
-        const password = formData.get('password');
-
-        try {
-          const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: { full_name: name },
-            },
-          }); // [web:27][web:36]
-
-          if (error) {
-            alert(error.message);
-            console.error(error);
-            return;
-          }
-
-          alert('Check your email to confirm your account.');
-          console.log('Signed up user:', data);
-        } catch (err) {
-          console.error(err);
-          alert('Unexpected error during sign up.');
-        }
+        const payload = {
+          name: formData.get('name'),
+          email: formData.get('email'),
+          password: formData.get('password'),
+        };
+        console.log('Sign up payload (send to backend):', payload);
+        // TODO: POST to your backend /api/auth/signup
+        alert('Sign up submitted (hook this to your backend).');
       });
 
-      // LOGIN – Supabase email/password
-      loginForm.addEventListener('submit', async (e) => {
+      loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const formData = new FormData(loginForm);
-        const email = formData.get('email');
-        const password = formData.get('password');
-
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          }); // [web:34][web:29]
-
-          if (error) {
-            alert(error.message);
-            console.error(error);
-            return;
-          }
-
-          alert('Logged in successfully!');
-          console.log('Login data:', data);
-          // TODO: redirect to your app page, e.g. window.location.href = 'generate.html';
-        } catch (err) {
-          console.error(err);
-          alert('Unexpected error during login.');
-        }
+        const payload = {
+          email: formData.get('email'),
+          password: formData.get('password'),
+        };
+        console.log('Login payload (send to backend):', payload);
+        // TODO: POST to your backend /api/auth/login
+        alert('Login submitted (hook this to your backend).');
       });
 
       // GOOGLE SIGN IN INTEGRATION (front-end)
+      // Replace this with your real Google client ID.
       const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
 
       function handleCredentialResponse(response) {
         const idToken = response.credential;
         console.log('Google ID token:', idToken);
+        // TODO: send idToken to your backend:
+        // fetch('/api/auth/google', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ idToken }),
+        // }).then(...);
         alert('Google sign-in successful (now send ID token to backend).');
       }
 
