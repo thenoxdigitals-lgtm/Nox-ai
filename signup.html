@@ -6,31 +6,23 @@
     <title>Nox AI – Sign up / Login | thenoxdigital.com</title>
 
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RP5M4N271"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-6RP5M4N271');
-    </script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6RP5M4N271"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-    <!-- Tailwind -->
+  gtag('config', 'G-6RP5M4N271');
+</script>
+<!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-
-    <!-- Supabase -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script>
-      const supabaseUrl = 'https://ooyouwalbpvqdjvvtsjj.supabase.co';
-      const supabaseKey = 'sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4';
-      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    </script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Google Identity Services (optional, kept for future use) -->
+    <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
@@ -133,8 +125,13 @@
               <a href="generate.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Generate</a>
               <a href="pricing.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">Pricing</a>
               <a href="about.html" class="nav-link text-sm font-medium text-gray-600 hover:text-[#0B1F3A]">About</a>
-              <!-- Auth area -->
-              <div id="navAuth"></div>
+              <a href="signup.html"
+                 class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
+                Sign up
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
             </div>
 
             <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600">
@@ -153,7 +150,6 @@
             <a href="pricing.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">Pricing</a>
             <a href="about.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">About</a>
             <a href="signup.html"
-               id="mobileSignupLink"
                class="gradient-btn block text-center px-6 py-2.5 text-sm font-medium text-white rounded-full mt-4">
               Sign up
             </a>
@@ -347,7 +343,17 @@
       </footer>
     </div>
 
+        <!-- Supabase JS (put before your custom script) -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
     <script>
+      // SUPABASE CONFIG – put your real values here
+      const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
+      const SUPABASE_ANON_KEY = 'YOUR_PUBLIC_ANON_KEY';
+
+      // Create a single Supabase client (only once)
+      const supabase = supabasejs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
       // NAV + MOBILE
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
       const mobileMenu = document.getElementById('mobileMenu');
@@ -430,11 +436,11 @@
         `;
       });
 
-      // AUTH HANDLERS (Supabase)
+      // SIGNUP – Supabase email/password
       signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(signupForm);
-        const fullName = formData.get('name');
+        const name = formData.get('name');
         const email = formData.get('email');
         const password = formData.get('password');
 
@@ -443,27 +449,25 @@
             email,
             password,
             options: {
-              data: {
-                full_name: fullName
-              }
-            }
-          }); // [web:594]
+              data: { full_name: name },
+            },
+          }); // [web:27][web:36]
 
           if (error) {
-            alert(error.message || 'Could not sign up.');
+            alert(error.message);
+            console.error(error);
             return;
           }
 
-          // If email confirmation is on, user may need to confirm before session exists.
-          alert('Account created. Check your email to confirm, then you will be able to log in.');
-          // Optionally redirect:
-          // window.location.href = 'profile.html';
+          alert('Check your email to confirm your account.');
+          console.log('Signed up user:', data);
         } catch (err) {
           console.error(err);
           alert('Unexpected error during sign up.');
         }
       });
 
+      // LOGIN – Supabase email/password
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(loginForm);
@@ -474,86 +478,54 @@
           const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
-          }); // [web:591]
+          }); // [web:34][web:29]
 
           if (error) {
-            alert(error.message || 'Could not log in.');
+            alert(error.message);
+            console.error(error);
             return;
           }
 
-          // Successful login -> go to profile/dashboard
-          window.location.href = 'profile.html';
+          alert('Logged in successfully!');
+          console.log('Login data:', data);
+          // TODO: redirect to your app page, e.g. window.location.href = 'generate.html';
         } catch (err) {
           console.error(err);
           alert('Unexpected error during login.');
         }
       });
 
-      // GOOGLE SIGN IN WITH SUPABASE OAUTH
+      // GOOGLE SIGN IN INTEGRATION (front-end)
+      const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
+
+      function handleCredentialResponse(response) {
+        const idToken = response.credential;
+        console.log('Google ID token:', idToken);
+        alert('Google sign-in successful (now send ID token to backend).');
+      }
+
+      window.onload = () => {
+        if (window.google && GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID') {
+          google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleCredentialResponse,
+          });
+        }
+      };
+
       const googleSignupBtn = document.getElementById('googleSignupBtn');
       const googleLoginBtn = document.getElementById('googleLoginBtn');
 
-      async function signInWithGoogle() {
-        try {
-          const redirectUrl = window.location.origin + '/profile.html';
-          const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: redirectUrl,
-            },
-          }); // [web:597][web:624]
-
-          if (error) {
-            alert(error.message || 'Google sign-in failed.');
-          }
-          // Redirect handled by Supabase (page will navigate to Google then back).
-        } catch (err) {
-          console.error(err);
-          alert('Unexpected error during Google sign-in.');
-        }
-      }
-
-      googleSignupBtn.addEventListener('click', signInWithGoogle);
-      googleLoginBtn.addEventListener('click', signInWithGoogle);
-
-      // Navbar auth state (same pattern as other pages)
-      document.addEventListener('DOMContentLoaded', async () => {
-        const navAuth = document.getElementById('navAuth');
-        const mobileSignupLink = document.getElementById('mobileSignupLink');
-
-        if (!navAuth) return;
-
-        const { data, error } = await supabase.auth.getUser();
-        const user = data?.user || null;
-
-        if (!user) {
-          // Logged out
-          navAuth.innerHTML = `
-            <a href="signup.html"
-               class="gradient-btn px-6 py-2.5 text-sm font-medium text-white rounded-full shadow-sm inline-flex items-center gap-2">
-              Sign up
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
-          `;
+      function promptGoogle() {
+        if (!window.google || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+          alert('Google Sign-In is not configured yet. Add your Google Client ID in the code.');
           return;
         }
+        google.accounts.id.prompt();
+      }
 
-        const fullName = user.user_metadata?.full_name || 'Profile';
-        navAuth.innerHTML = `
-          <a href="profile.html"
-             class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg-white">
-            <span>${fullName.split(' ')[0]}</span>
-          </a>
-        `;
-
-        if (mobileSignupLink) {
-          mobileSignupLink.textContent = 'Profile';
-          mobileSignupLink.href = 'profile.html';
-        }
-      });
+      googleSignupBtn.addEventListener('click', promptGoogle);
+      googleLoginBtn.addEventListener('click', promptGoogle);
     </script>
   </body>
 </html>
