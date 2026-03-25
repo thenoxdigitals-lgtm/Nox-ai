@@ -453,11 +453,10 @@
       // === Razorpay subscription start ===
       async function startCheckout(planId) {
         try {
-          // get current Supabase user id (optional but recommended)
           const { data } = await supabaseClient.auth.getUser();
           const user = data.user;
 
-          const res = await fetch("https://YOUR_BACKEND_DOMAIN.com/create-subscription", {
+          const res = await fetch("http://localhost:4000/create-subscription", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -473,7 +472,7 @@
           }
 
           const options = {
-            key: "RAZORPAY_KEY_ID", // replace with your live key
+            key: "rzp_test_YOUR_KEY_HERE", // put your Razorpay TEST key_id here
             subscription_id: json.subscription_id,
             name: "Nox AI",
             description: json.description || "Nox AI subscription",
@@ -482,8 +481,7 @@
               supabase_user_id: user ? user.id : ""
             },
             handler: function (response) {
-              // Optional: hit your backend to verify payment
-              // using response.razorpay_payment_id etc.
+              // Optional: call backend to verify payment
             },
             prefill: {
               email: user ? user.email : ""
