@@ -497,6 +497,23 @@
           return;
         }
 
+        // Create profile row with 2 free credits
+        try {
+          const userId = data?.user?.id;
+          if (userId) {
+            await supabaseClient
+              .from("profiles")
+              .insert({
+                id: userId,
+                full_name: name || null,
+                credits_remaining: 2,
+                current_plan: "free"
+              });
+          }
+        } catch (e) {
+          console.error("Error creating profile row", e);
+        }
+
         alert("Account created. Please check your email and click the link to confirm your address before logging in.");
         signupForm.reset();
       });
