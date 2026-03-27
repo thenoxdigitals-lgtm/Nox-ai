@@ -451,7 +451,7 @@
       });
 
       // === Razorpay subscription start ===
-      const BACKEND_URL = "https://nox-backend-qkjw.onrender.com";  // use your exact URL // change to your deployed URL later
+      const BACKEND_URL = "https://nox-backend-qkjw.onrender.com";  // your deployed backend URL
 
       async function startCheckout(planId) {
         try {
@@ -459,7 +459,7 @@
           const user = data.user;
 
           if (!user) {
-            alert("Please sign up / log in first.");
+            alert("Please sign up or log in first to purchase a plan.");
             window.location.href = "signup.html";
             return;
           }
@@ -475,7 +475,7 @@
 
           const json = await res.json();
           if (!res.ok) {
-            alert(json.error || "Something went wrong. Please try again.");
+            alert(json.error || "Could not start subscription. Please try again in a moment.");
             return;
           }
 
@@ -489,11 +489,15 @@
               supabase_user_id: user.id
             },
             handler: function (response) {
-              // Optional: call backend to verify payment
               console.log("Payment success:", response);
+              alert("Payment successful. Your credits will be updated in a few seconds.\nRedirecting you to your dashboard…");
+              window.location.href = "dashboard.html";
             },
             prefill: {
               email: user.email || ""
+            },
+            theme: {
+              color: "#0F52BA"
             }
           };
 
@@ -501,7 +505,7 @@
           rzp.open();
         } catch (err) {
           console.error(err);
-          alert("Unable to start checkout. Please try again.");
+          alert("Unable to start checkout. Please check your connection and try again.");
         }
       }
       // === Razorpay subscription end ===
