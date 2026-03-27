@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email verified – Nox AI</title>
+
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+      * { font-family: 'Poppins', sans-serif; }
+      .gradient-btn {
+        background: linear-gradient(135deg, #0F52BA 0%, #14B8A6 100%);
+        transition: all 0.3s ease;
+      }
+      .gradient-btn:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 18px 50px rgba(15, 82, 186, 0.35);
+      }
+      body { box-sizing: border-box; }
+    </style>
+  </head>
+  <body class="h-full bg-gradient-to-br from-gray-50 via-white to-blue-50/30 text-gray-900">
+    <div class="min-h-screen flex flex-col items-center justify-center px-4">
+      <div class="bg-white/95 border border-gray-100 rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 text-center">
+        <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+          <svg class="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-semibold text-[#0B1F3A] mb-2">
+          Your email is verified
+        </h1>
+        <p class="text-sm text-gray-600 mb-6">
+          Your Nox AI account email has been confirmed. You can now log in and start generating websites.
+        </p>
+        <button
+          type="button"
+          onclick="window.location.href='signup.html#login'"
+          class="gradient-btn w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-white">
+          Login to continue
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Optional: auto-open Login tab on signup page when coming from this page
+      // (we already use #login in the URL, your signup.js can check location.hash)
+    </script>
+  </body>
+</html>
