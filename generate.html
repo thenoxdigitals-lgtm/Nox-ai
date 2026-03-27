@@ -347,7 +347,7 @@
       const SUPABASE_ANON_KEY = "sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4";
       const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // CHANGE THIS to your backend base URL (e.g. Vercel / Render / your server)
+      // Your backend base URL
       const BACKEND_BASE_URL = "https://nox-backend-qkjw.onrender.com";
 
       let currentUser = null;
@@ -399,33 +399,7 @@
         }
       }
 
-      // We'll keep consumeCredit() for backup / UI but
-      // the backend will also enforce credits via RPC.
-      async function consumeCredit() {
-        if (!currentUser) return { ok: false, reason: 'not_logged_in' };
-        if (currentCredits === null) await loadUserCredits(currentUser.id);
-        if ((currentCredits ?? 0) <= 0) return { ok: false, reason: 'no_credits' };
-
-        const { data, error } = await supabaseClient
-          .rpc('consume_credit_and_increment');
-
-        if (error) {
-          console.error('consume_credit_and_increment error', error);
-          if (error.message && error.message.includes('No credits remaining')) {
-            currentCredits = 0;
-            return { ok: false, reason: 'no_credits' };
-          }
-          return { ok: false, reason: 'rpc_failed' };
-        }
-
-        if (data && data.length > 0) {
-          currentCredits = data[0].credits_remaining ?? currentCredits;
-        }
-
-        return { ok: true };
-      }
-
-      // basic layout interactions
+      // Layout interactions
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
       const mobileMenu = document.getElementById('mobileMenu');
       if (mobileMenuBtn && mobileMenu) {
@@ -467,7 +441,7 @@
       const copyCodeBtn = document.getElementById('copyCodeBtn');
       const quickPromptButtons = document.querySelectorAll('.quick-prompt');
 
-      let latestGeneratedHtml = ""; // store last generated HTML
+      let latestGeneratedHtml = "";
 
       quickPromptButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -573,7 +547,6 @@
         setLoadingState(true);
 
         try {
-          // Get Supabase session to send JWT to backend
           const { data: sessionData } = await supabaseClient.auth.getSession();
           const session = sessionData.session;
           if (!session) {
@@ -582,10 +555,6 @@
             return;
           }
 
-          // Call your backend, which will:
-          // - call consume_credit_and_increment()
-          // - call Gemini
-          // - return { html, credits_remaining }
           const res = await fetch(`${BACKEND_BASE_URL}/api/generate-site`, {
             method: "POST",
             headers: {
@@ -610,9 +579,11 @@
             return;
           }
 
-          // Update credits if backend returned it
+          // If backend returned updated credits, use them; otherwise, pull fresh from Supabase
           if (typeof data.credits_remaining === "number") {
             currentCredits = data.credits_remaining;
+          } else if (currentUser) {
+            await loadUserCredits(currentUser.id);
           }
 
           const html = (data.html || "").trim();
