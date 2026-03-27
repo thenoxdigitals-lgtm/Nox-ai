@@ -285,7 +285,7 @@
       // Supabase client (must match signup page)
       const SUPABASE_URL = "https://ooyouwalbpvqdjvvtsjj.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4";
-      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); [file:30]
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       async function loadDashboardUser() {
         const subtitle = document.getElementById('dashboardSubtitle');
@@ -356,7 +356,6 @@
 
       document.addEventListener('DOMContentLoaded', () => {
         loadDashboardUser();
-        // Hook logout via shared auth.js helper
         if (typeof wireLogoutButtonsWithSupabase === 'function') {
           wireLogoutButtonsWithSupabase(supabaseClient);
         }
