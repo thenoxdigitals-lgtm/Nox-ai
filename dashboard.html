@@ -159,18 +159,18 @@
                 <div class="grid sm:grid-cols-3 gap-4 text-sm text-gray-700">
                   <div class="bg-gray-50 rounded-xl p-4">
                     <p class="text-xs text-gray-500 mb-1">Current plan</p>
-                    <p id="planName" class="font-semibold text-[#0B1F3A]">Standard</p>
-                    <p class="text-[11px] text-gray-500 mt-1" id="planDetail">300 credits / month</p>
+                    <p id="planName" class="font-semibold text-[#0B1F3A]">Free</p>
+                    <p class="text-[11px] text-gray-500 mt-1" id="planDetail">2 credits / lifetime</p>
                   </div>
                   <div class="bg-gray-50 rounded-xl p-4">
                     <p class="text-xs text-gray-500 mb-1">Credits remaining</p>
-                    <p id="creditsRemaining" class="font-semibold text-[#0B1F3A]">300</p>
-                    <p class="text-[11px] text-gray-500 mt-1">Resets on billing date</p>
+                    <p id="creditsRemaining" class="font-semibold text-[#0B1F3A]">2</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Updated after purchase</p>
                   </div>
                   <div class="bg-gray-50 rounded-xl p-4">
                     <p class="text-xs text-gray-500 mb-1">Websites generated</p>
                     <p id="websitesGenerated" class="font-semibold text-[#0B1F3A]">0</p>
-                    <p class="text-[11px] text-gray-500 mt-1">This billing cycle</p>
+                    <p class="text-[11px] text-gray-500 mt-1">This account</p>
                   </div>
                 </div>
 
@@ -285,7 +285,7 @@
       // Supabase client (must match signup page)
       const SUPABASE_URL = "https://ooyouwalbpvqdjvvtsjj.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4";
-      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); // [web:56][web:76]
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); [file:30]
 
       async function loadDashboardUser() {
         const subtitle = document.getElementById('dashboardSubtitle');
@@ -299,7 +299,7 @@
 
         try {
           // 1) Check auth
-          const { data: userData, error: userError } = await supabaseClient.auth.getUser(); // [web:48]
+          const { data: userData, error: userError } = await supabaseClient.auth.getUser();
           if (userError || !userData.user) {
             window.location.href = "signup.html";
             return;
@@ -326,20 +326,27 @@
           // 2) Load profile from Supabase
           const { data: profile, error: profileError } = await supabaseClient
             .from('profiles')
-            .select('plan_name, credits_remaining, websites_generated')
+            .select('current_plan, credits_remaining, websites_generated')
             .eq('id', user.id)
-            .single(); // [web:129][web:132]
+            .single();
 
           if (profileError) {
             console.warn('Profile error:', profileError.message);
           } else if (profile) {
-            if (planNameEl) planNameEl.textContent = profile.plan_name || 'Standard';
+            const planLabel = profile.current_plan || 'Free';
+            const credits = profile.credits_remaining ?? 0;
+            const websites = profile.websites_generated ?? 0;
+
+            if (planNameEl) planNameEl.textContent = planLabel;
             if (planDetailEl) {
-              const cr = profile.credits_remaining ?? 0;
-              planDetailEl.textContent = `${cr} credits / month`;
+              if (planLabel === 'Free') {
+                planDetailEl.textContent = `${credits} credits / lifetime`;
+              } else {
+                planDetailEl.textContent = `${credits} credits / current plan`;
+              }
             }
-            if (creditsEl) creditsEl.textContent = profile.credits_remaining ?? 0;
-            if (websitesEl) websitesEl.textContent = profile.websites_generated ?? 0;
+            if (creditsEl) creditsEl.textContent = credits;
+            if (websitesEl) websitesEl.textContent = websites;
           }
         } catch (e) {
           console.error(e);
@@ -350,7 +357,9 @@
       document.addEventListener('DOMContentLoaded', () => {
         loadDashboardUser();
         // Hook logout via shared auth.js helper
-        wireLogoutButtonsWithSupabase(supabaseClient);
+        if (typeof wireLogoutButtonsWithSupabase === 'function') {
+          wireLogoutButtonsWithSupabase(supabaseClient);
+        }
       });
     </script>
   </body>
