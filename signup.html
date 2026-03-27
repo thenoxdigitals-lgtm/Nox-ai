@@ -486,12 +486,13 @@
         setLoading(signupSubmit, false);
 
         if (error) {
-          showError(error.message || "Could not create account. Please try again.");
-          return;
-        }
+  showError(error.message || "Could not create account. Please try again.");
+  return;
+}
 
-        // If email confirmation is disabled, user may be logged in immediately.
-        window.location.href = "dashboard.html";
+// Show confirm email message and keep user on this page
+alert("Account created. Please check your email and click the link to confirm your address before logging in.");
+signupForm.reset();
       });
 
       loginForm.addEventListener('submit', async (e) => {
