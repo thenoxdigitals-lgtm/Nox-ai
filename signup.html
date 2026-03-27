@@ -459,6 +459,13 @@
         `;
       });
 
+      // Auto-open Login tab when URL has #login
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.location.hash === '#login') {
+          tabLogin.click();
+        }
+      });
+
       // EMAIL/PASSWORD HANDLERS (Supabase)
       signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -476,24 +483,22 @@
 
         setLoading(signupSubmit, true);
         const { data, error } = await supabaseClient.auth.signUp({
-  email,
-  password,
-  options: {
-    data: { name },
-    emailRedirectTo: "https://thenoxdigital.com/email-confirmed.html"
-  }
-});
-
+          email,
+          password,
+          options: {
+            data: { name },
+            emailRedirectTo: "https://thenoxdigital.com/email-confirmed.html"
+          }
+        });
         setLoading(signupSubmit, false);
 
         if (error) {
-  showError(error.message || "Could not create account. Please try again.");
-  return;
-}
+          showError(error.message || "Could not create account. Please try again.");
+          return;
+        }
 
-// Show confirm email message and keep user on this page
-alert("Account created. Please check your email and click the link to confirm your address before logging in.");
-signupForm.reset();
+        alert("Account created. Please check your email and click the link to confirm your address before logging in.");
+        signupForm.reset();
       });
 
       loginForm.addEventListener('submit', async (e) => {
@@ -514,7 +519,6 @@ signupForm.reset();
           email,
           password
         });
-
         setLoading(loginSubmit, false);
 
         if (error) {
