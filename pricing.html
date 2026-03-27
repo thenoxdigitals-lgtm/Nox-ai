@@ -211,7 +211,7 @@
               <div class="mt-auto">
                 <button
                   type="button"
-                  onclick="startCheckout('plan_SVRRQoK3FvsFY2')"
+                  onclick="startCheckout('plan_SW4tX6wgjb7Xpv')"
                   class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
                   Get monthly plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,7 +254,7 @@
               <div class="mt-auto">
                 <button
                   type="button"
-                  onclick="startCheckout('plan_SVRSPwR7DTzHEH')"
+                  onclick="startCheckout('plan_SW4troEOKKCe9T')"
                   class="gradient-btn w-full text-center px-4 py-2.5 text-sm font-medium text-white rounded-full inline-flex items-center justify-center gap-2">
                   Get yearly plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +293,7 @@
               <div class="mt-auto">
                 <button
                   type="button"
-                  onclick="startCheckout('plan_SVRTWBZ5tiA87t')"
+                  onclick="startCheckout('plan_SW4uE4Hw33PD3K')"
                   class="btn-soft w-full text-center px-4 py-2.5 text-sm font-medium text-[#0B1F3A] rounded-full border-2 border-gray-200 bg-white inline-flex items-center justify-center gap-2">
                   Get 3‑year plan
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -451,17 +451,25 @@
       });
 
       // === Razorpay subscription start ===
+      const BACKEND_URL = "http://localhost:4000"; // change to your deployed URL later
+
       async function startCheckout(planId) {
         try {
           const { data } = await supabaseClient.auth.getUser();
           const user = data.user;
 
-          const res = await fetch("http://localhost:4000/create-subscription", {
+          if (!user) {
+            alert("Please sign up / log in first.");
+            window.location.href = "signup.html";
+            return;
+          }
+
+          const res = await fetch(`${BACKEND_URL}/create-subscription`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               plan_id: planId,
-              supabase_user_id: user ? user.id : null
+              supabase_user_id: user.id
             })
           });
 
@@ -472,19 +480,20 @@
           }
 
           const options = {
-            key: "rzp_test_SVS9OEPz7h2mNk", // put your Razorpay TEST key_id here
+            key: "rzp_test_SVS9OEPz7h2mNk", // your Razorpay TEST key_id
             subscription_id: json.subscription_id,
             name: "Nox AI",
             description: json.description || "Nox AI subscription",
             currency: json.currency || "INR",
             notes: {
-              supabase_user_id: user ? user.id : ""
+              supabase_user_id: user.id
             },
             handler: function (response) {
               // Optional: call backend to verify payment
+              console.log("Payment success:", response);
             },
             prefill: {
-              email: user ? user.email : ""
+              email: user.email || ""
             }
           };
 
