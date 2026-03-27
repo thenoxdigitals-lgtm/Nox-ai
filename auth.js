@@ -2,7 +2,6 @@
 
 // Supabase-based logout and protection helpers
 
-// This helper is called from pages (e.g. dashboard.html) once supabaseClient exists
 function wireLogoutButtonsWithSupabase(supabaseClient) {
   const logoutBtn = document.getElementById('logoutBtn');
   const logoutBtnProfile = document.getElementById('logoutBtnProfile');
@@ -12,7 +11,11 @@ function wireLogoutButtonsWithSupabase(supabaseClient) {
   const confirmBtn = document.getElementById('confirmLogoutBtn');
 
   function openModal() {
-    if (!logoutModal) return;
+    if (!logoutModal) {
+      // fallback: direct logout if no modal exists
+      doLogout(supabaseClient);
+      return;
+    }
     logoutModal.classList.remove('hidden');
     logoutModal.classList.add('flex');
   }
@@ -24,7 +27,11 @@ function wireLogoutButtonsWithSupabase(supabaseClient) {
   }
 
   const openButtons = [logoutBtn, logoutBtnProfile, logoutBtnMobile].filter(Boolean);
-  openButtons.forEach(btn => btn.addEventListener('click', openModal));
+  if (openButtons.length > 0) {
+    openButtons.forEach(btn => {
+      btn.addEventListener('click', openModal);
+    });
+  }
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', closeModal);
@@ -32,15 +39,19 @@ function wireLogoutButtonsWithSupabase(supabaseClient) {
 
   if (confirmBtn) {
     confirmBtn.addEventListener('click', async () => {
-      try {
-        await supabaseClient.auth.signOut();
-      } catch (e) {
-        console.error('Error during sign out', e);
-      } finally {
-        closeModal();
-        window.location.href = 'index.html';
-      }
+      await doLogout(supabaseClient);
+      closeModal();
     });
+  }
+}
+
+async function doLogout(supabaseClient) {
+  try {
+    await supabaseClient.auth.signOut();
+  } catch (e) {
+    console.error('Error during sign out', e);
+  } finally {
+    window.location.href = 'signup.html';
   }
 }
 
