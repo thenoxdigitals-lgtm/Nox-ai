@@ -5,12 +5,14 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const Razorpay = require("razorpay");
 const { createClient } = require("@supabase/supabase-js");
+const crypto = require("crypto");
+const { GoogleGenAI } = require("@google/genai"); // NEW: Gemini
 
 // --- Setup basic app ---
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// We need raw body ONLY for webhook verification later
+// We need raw body ONLY for webhook verification
 app.use("/razorpay-webhook", bodyParser.raw({ type: "*/*" }));
 // For normal JSON body
 app.use(express.json());
@@ -28,6 +30,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
+// --- Setup Gemini client (Google AI Studio) ---
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+// Helper: get Supabase user from JWT sent by frontend
+async function getUserFromToken(req) {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length)
+    : null;
+
+  if (!token) return null;
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) {
+    console.error("getUser error:", error);
+    return null;
+  }
+  return data.user;
+}
+
 // Simple health check
 app.get("/", (req, res) => {
   res.send("Nox backend is running");
@@ -42,24 +66,19 @@ app.post("/create-subscription", async (req, res) => {
       return res.status(400).json({ error: "Missing plan_id" });
     }
 
-    // Optional: ensure user exists in Supabase before creating subscription
     if (!supabase_user_id) {
       return res.status(400).json({ error: "User not logged in" });
     }
 
-    // Create Razorpay subscription
-    // total_count: 0 = until cancelled, or set a number for fixed cycles
-    // Create Razorpay subscription
-// total_count: must be >= 1
-const subscription = await razorpayInstance.subscriptions.create({
-  plan_id: plan_id,
-  total_count: 1,   // was 0
-  notes: {
-    supabase_user_id: supabase_user_id,
-  },
-});
+    // total_count must be >= 1
+    const subscription = await razorpayInstance.subscriptions.create({
+      plan_id: plan_id,
+      total_count: 1,
+      notes: {
+        supabase_user_id: supabase_user_id,
+      },
+    });
 
-    // You can store subscription.id immediately mapped to user
     await supabase.from("subscriptions").insert({
       supabase_user_id,
       razorpay_subscription_id: subscription.id,
@@ -80,14 +99,12 @@ const subscription = await razorpayInstance.subscriptions.create({
 });
 
 // ========== 2) RAZORPAY WEBHOOK ENDPOINT ==========
-const crypto = require("crypto");
-
 app.post("/razorpay-webhook", async (req, res) => {
   try {
-    const webhookSecret = "your_webhook_secret_here"; // set same in Razorpay dashboard
+    const webhookSecret = "your_webhook_secret_here"; // TODO: put in env
 
     const signature = req.headers["x-razorpay-signature"];
-    const body = req.body; // raw body because of bodyParser.raw
+    const body = req.body; // raw body
 
     const expectedSignature = crypto
       .createHmac("sha256", webhookSecret)
@@ -100,18 +117,19 @@ app.post("/razorpay-webhook", async (req, res) => {
     }
 
     const event = JSON.parse(body.toString());
-
     const eventType = event.event;
     const payload = event.payload || {};
 
-    if (eventType === "subscription.activated" || eventType === "subscription.charged") {
+    if (
+      eventType === "subscription.activated" ||
+      eventType === "subscription.charged"
+    ) {
       const subscriptionObj = payload.subscription.entity;
       const razorpaySubscriptionId = subscriptionObj.id;
       const notes = subscriptionObj.notes || {};
       const supabaseUserId = notes.supabase_user_id;
 
       if (supabaseUserId) {
-        // Decide credits by plan_id or amount, for now hardcode example:
         let creditsToAdd = 0;
 
         if (subscriptionObj.plan_id === "plan_SVRRQoK3FvsFY2") {
@@ -151,11 +169,73 @@ app.post("/razorpay-webhook", async (req, res) => {
       }
     }
 
-    // You can also handle subscription.cancelled etc.
     res.json({ status: "ok" });
   } catch (err) {
     console.error("Error in webhook:", err);
     res.status(500).send("Webhook error");
+  }
+});
+
+// ========== 3) GEMINI GENERATION ENDPOINT ==========
+app.post("/api/generate-site", async (req, res) => {
+  try {
+    const user = await getUserFromToken(req);
+    if (!user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const prompt = (req.body.prompt || "").trim();
+    if (!prompt) {
+      return res.status(400).json({ error: "Missing prompt" });
+    }
+
+    // 1) Consume a credit via Supabase RPC
+    const { data: rpcData, error: rpcError } = await supabase.rpc(
+      "consume_credit_and_increment",
+      {}
+    );
+
+    if (rpcError) {
+      console.error("consume_credit_and_increment error:", rpcError);
+      if (rpcError.message?.includes("No credits remaining")) {
+        return res.status(402).json({ error: "No credits remaining" });
+      }
+      return res.status(500).json({ error: "Could not use a credit" });
+    }
+
+    const creditsRemaining =
+      Array.isArray(rpcData) && rpcData.length > 0
+        ? rpcData[0].credits_remaining
+        : null;
+
+    // 2) Call Gemini to generate HTML
+    const response = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text:
+                "You are a website generator. Output ONLY complete HTML code with <html>, <head>, <body> " +
+                "and include Tailwind CSS CDN. No explanations, no markdown. " +
+                "Generate a responsive website for this request: " +
+                prompt,
+            },
+          ],
+        },
+      ],
+    });
+
+    const html = response.text();
+
+    return res.json({
+      html,
+      credits_remaining: creditsRemaining,
+    });
+  } catch (err) {
+    console.error("generate-site error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
