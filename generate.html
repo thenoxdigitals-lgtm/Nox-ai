@@ -457,7 +457,7 @@
 
         wrapper.innerHTML = `
           <div class="max-w-[80%] rounded-2xl bg-[#0F52BA] px-4 py-2.5 text-sm text-white shadow">
-            ${text.replace(/\n/g, '<br>')}
+            ${text.replace(/\\n/g, '<br>')}
           </div>
           <div class="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold text-[#0B1F3A]">
             You
@@ -490,7 +490,7 @@
         sendBtn.disabled = loading;
         if (loading) {
           sendIcon.innerHTML = `
-            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-4 w-4 text:white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor"
                 d="M4 12a8 8 0 018-8v4l3.536-3.536A8.001 8.001 0 014 12z"></path>
@@ -531,14 +531,6 @@
 
         if (!currentUser) {
           appendBotMessage("You need to sign in before generating websites. Please sign up or log in first.");
-          return;
-        }
-
-        if (currentCredits === null) {
-          await loadUserCredits(currentUser.id);
-        }
-        if ((currentCredits ?? 0) <= 0) {
-          appendBotMessage("You have no credits remaining. Please upgrade your plan or wait for your next billing cycle.");
           return;
         }
 
