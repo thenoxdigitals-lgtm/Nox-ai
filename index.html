@@ -274,8 +274,536 @@
         </div>
       </nav>
 
-      <!-- (rest of your file stays exactly the same) -->
-      <!-- HERO, DEMO, PROCESS, SERVICES, TESTIMONIALS, COMPARISON, FINAL CTA, FOOTER, SCRIPTS -->
-      <!-- ... -->
+      <!-- HERO -->
+      <section id="home" class="relative min-h-screen flex items-center pt-20 overflow-hidden bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
+        <div class="absolute inset-0 overflow-hidden">
+          <div class="absolute top-24 left-[-80px] w-80 h-80 bg-gradient-to-br from-[#0F52BA]/6 to-[#14B8A6]/6 rounded-full blur-3xl float-animation"></div>
+          <div class="absolute top-20 right-[-60px] w-72 h-72 bg-gradient-to-br from-[#0F52BA]/5 to-[#14B8A6]/5 rounded-full blur-3xl float-animation"></div>
+          <div class="absolute bottom-20 left-[-40px] w-96 h-96 bg-gradient-to-br from-[#14B8A6]/5 to-[#0F52BA]/5 rounded-full blur-3xl float-animation" style="animation-delay:-3s;"></div>
+        </div>
+
+        <div class="relative w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-20">
+          <div class="grid lg:grid-cols-2 gap-14 items-center">
+            <div class="space-y-8">
+              <div class="inline-flex items-center gap-2 px-4 py-2 bg-[#0F52BA]/5 rounded-full fade-in-up">
+                <span class="w-2 h-2 bg-[#14B8A6] rounded-full animate-pulse"></span>
+                <span class="text-sm font-medium text-[#0B1F3A]">AI website generator • No code • No hosting</span>
+              </div>
+
+              <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-[#0B1F3A] leading-tight fade-in-up delay-100">
+                Build your website<br>
+                in <span class="gradient-text">60 seconds</span><br>
+                using AI.
+              </h1>
+
+              <p class="text-lg text-gray-600 max-w-xl fade-in-up delay-200">
+                Nox AI turns a single prompt into a production‑ready website – no coding, no hosting setup, just download the Tailwind code and launch anywhere.
+              </p>
+
+              <!-- MAIN TOP CTA -->
+              <div class="flex flex-wrap gap-4 items-center fade-in-up delay-300">
+                <a href="generate.html"
+                   class="gradient-btn px-8 py-4 text-white font-medium rounded-full inline-flex items-center gap-2">
+                  Generate Website Now
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </a>
+              </div>
+
+              <div class="pt-6 fade-in-up delay-400">
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-[0.25em] mb-3">
+                  Launch in 3 simple steps
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-[#0F52BA]/10 flex items-center justify-center text-xs font-semibold text-[#0F52BA]">1</div>
+                    <div>
+                      <p class="text-sm font-semibold text-[#0B1F3A]">Enter a prompt</p>
+                      <p class="text-xs text-gray-500">Describe your brand and pages.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-[#14B8A6]/10 flex items-center justify-center text-xs font-semibold text-[#14B8A6]">2</div>
+                    <div>
+                      <p class="text-sm font-semibold text-[#0B1F3A]">Generate with AI</p>
+                      <p class="text-xs text-gray-500">Nox builds the full layout.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-700">3</div>
+                    <div>
+                      <p class="text-sm font-semibold text-[#0B1F3A]">Download code</p>
+                      <p class="text-xs text-gray-500">Export clean Tailwind HTML.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT SIDE with original inner circle -->
+            <div class="relative hidden lg:block">
+              <div class="relative w-full max-w-lg aspect-square mx-auto">
+                <div class="absolute top-10 right-0 bg-white rounded-2xl shadow-xl p-6 float-animation" style="animation-delay:-1s;">
+                  <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-[#0F52BA] to-[#14B8A6] rounded-xl flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-[#0B1F3A]">Growth Rate</div>
+                      <div class="text-xl font-bold gradient-text">+127%</div>
+                      <div class="text-xs text-gray-400">Average client uplift</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="absolute bottom-20 left-0 bg-white rounded-2xl shadow-xl p-6 float-animation" style="animation-delay:-2s;">
+                  <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-[#14B8A6] to-[#0F52BA] rounded-xl flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-[#0B1F3A]">Project Success</div>
+                      <div class="text-xl font-bold gradient-text">100%</div>
+                      <div class="text-xs text-gray-400">Delivered with quality</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <div class="w-64 h-64 relative">
+                    <div class="absolute inset-0 bg-gradient-to-br from-[#0F52BA]/12 to-[#14B8A6]/12 rounded-full animate-pulse"></div>
+                    <div class="absolute inset-8 bg-gradient-to-br from-[#0F52BA]/20 to-[#14B8A6]/20 rounded-full"></div>
+                    <div class="absolute inset-16 bg-gradient-to-br from-[#0F52BA] to-[#14B8A6] rounded-full flex items-center justify-center">
+                      <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEMO SECTION -->
+      <section id="demo" class="py-20 bg-white">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="grid lg:grid-cols-2 gap-12 items-start">
+            <div class="space-y-4">
+              <h2 class="text-3xl md:text-4xl font-bold text-[#0B1F3A] mb-2">
+                See Nox AI generate a site in seconds
+              </h2>
+              <p class="text-gray-600">
+                Type a short prompt, click generate, and watch Nox AI turn your idea into a responsive, Tailwind‑powered website you can export instantly.
+              </p>
+              <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                <li>• Before: blank page and complex builders.</li>
+                <li>• After: ready‑to‑ship layout with real copy and sections.</li>
+              </ul>
+            </div>
+
+            <div class="space-y-4">
+              <div class="grid gap-4">
+                <div class="border border-dashed border-gray-200 rounded-xl p-4">
+                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em] mb-2">Before • Prompt</p>
+                  <div class="bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
+                    “Create a modern 3‑page website for my AI marketing agency with hero, services, pricing, testimonials, and contact section.”
+                  </div>
+                </div>
+                <div class="border border-gray-100 rounded-xl p-4 shadow-sm bg-white">
+                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-[0.2em] mb-2">After • Generated Preview</p>
+                  <div class="bg-gray-900 rounded-lg p-3 text-xs text-gray-100 font-mono overflow-x-auto">
+                    &lt;section class="bg-gradient-to-br from-slate-950 to-slate-900 text-white"&gt;...<br>
+                    &lt;section id="services"&gt;...&lt;/section&gt;<br>
+                    &lt;section id="pricing"&gt;...&lt;/section&gt;<br>
+                    &lt;section id="testimonials"&gt;...&lt;/section&gt;<br>
+                    &lt;footer&gt;...&lt;/footer&gt;
+                  </div>
+                  <p class="mt-3 text-xs text-gray-500">Export the full Tailwind HTML and plug it into any stack in seconds.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROCESS -->
+      <section class="py-20 bg-white">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+            <div>
+              <h2 class="text-3xl md:text-4xl font-bold text-[#0B1F3A] mb-3">How Nox AI builds your site</h2>
+              <p class="text-gray-600 max-w-3xl">
+                Skip builders and forms. You talk to Nox AI once, it keeps context, and outputs the entire website structure and copy for you.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-4 gap-6">
+            <div class="service-card bg-white rounded-2xl p-6 border border-gray-100">
+              <div class="text-sm font-medium text-[#14B8A6] mb-2">Step 01</div>
+              <h3 class="text-lg font-semibold text-[#0B1F3A] mb-2">Describe your idea</h3>
+              <p class="text-sm text-gray-600">
+                Tell Nox what you’re building, who it’s for, and what needs to be on the site using a simple text prompt.
+              </p>
+            </div>
+            <div class="service-card bg-white rounded-2xl p-6 border border-gray-100">
+              <div class="text-sm font-medium text-[#14B8A6] mb-2">Step 02</div>
+              <h3 class="text-lg font-semibold text-[#0B1F3A] mb-2">Refine in chat</h3>
+              <p class="text-sm text-gray-600">
+                Answer quick follow‑ups about sections, tone, and style so the AI can shape a complete website brief.
+              </p>
+            </div>
+            <div class="service-card bg-white rounded-2xl p-6 border border-gray-100">
+              <div class="text-sm font-medium text-[#14B8A6] mb-2">Step 03</div>
+              <h3 class="text-lg font-semibold text-[#0B1F3A] mb-2">Generate & preview</h3>
+              <p class="text-sm text-gray-600">
+                Nox outputs a multi‑section Tailwind page in the preview pane. Scroll through and tweak via chat.
+              </p>
+            </div>
+            <div class="service-card bg-white rounded-2xl p-6 border border-gray-100">
+              <div class="text-sm font-medium text-[#14B8A6] mb-2">Step 04</div>
+              <h3 class="text-lg font-semibold text-[#0B1F3A] mb-2">Download your code</h3>
+              <p class="text-sm text-gray-600">
+                Copy the HTML into your project or download and deploy as‑is. Save versions by creating a free account.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SERVICES PREVIEW -->
+      <section class="py-24 bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="text-center max-w-2xl mx-auto mb-16">
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-[#0F52BA]/5 rounded-full mb-6">
+              <span class="text-sm font-medium text-[#0F52BA]">What you can generate</span>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold text-[#0B1F3A] mb-4">Website types Nox builds for you</h2>
+            <p class="text-gray-600">
+              From SaaS landing pages to agency sites and personal portfolios, Nox AI generates layouts modeled after modern, high‑converting designs.
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="service-card bg-white rounded-2xl p-8 shadow-sm">
+              <div class="service-icon w-14 h-14 bg-[#0F52BA]/10 rounded-xl flex items-center justify-center mb-6 transition-all">
+                <svg class="w-7 h-7 text-[#0F52BA] transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-[#0B1F3A] mb-3">SaaS & product pages</h3>
+              <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                Hero, features, pricing, FAQs, and CTAs laid out like modern SaaS marketing sites.
+              </p>
+            </div>
+
+            <div class="service-card bg-white rounded-2xl p-8 shadow-sm">
+              <div class="service-icon w-14 h-14 bg-[#14B8A6]/10 rounded-xl flex items-center justify-center mb-6 transition-all">
+                <svg class="w-7 h-7 text-[#14B8A6] transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-[#0B1F3A] mb-3">Agencies & services</h3>
+              <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                Services, processes, testimonials, and contact CTAs tailored for client‑service businesses.
+              </p>
+            </div>
+
+            <div class="service-card bg-white rounded-2xl p-8 shadow-sm">
+              <div class="service-icon w-14 h-14 bg-[#0F52BA]/10 rounded-xl flex items-center justify-center mb-6 transition-all">
+                <svg class="w-7 h-7 text-[#0F52BA] transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-[#0B1F3A] mb-3">Launch & campaign pages</h3>
+              <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                Fast one‑pagers for launches, waitlists, and promotions you can clone and tweak on demand.
+              </p>
+            </div>
+
+            <div class="service-card bg-white rounded-2xl p-8 shadow-sm">
+              <div class="service-icon w-14 h-14 bg-[#14B8A6]/10 rounded-xl flex items-center justify-center mb-6 transition-all">
+                <svg class="w-7 h-7 text-[#14B8A6] transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-[#0B1F3A] mb-3">Personal & portfolio</h3>
+              <p class="text-gray-600 text-sm leading-relaxed mb-4">
+                Clean personal sites with bio, projects, and calls‑to‑action for freelancers and creators.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TESTIMONIALS + STATS -->
+      <section class="py-20 bg-white">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10 mb-10">
+            <div>
+              <h2 class="text-3xl md:text-4xl font-bold text-[#0B1F3A] mb-3">Teams ship faster with Nox AI</h2>
+              <p class="text-gray-600 max-w-xl">
+                Solo founders, marketers, and small agencies use Nox AI to go from idea to live website in minutes instead of weeks.
+              </p>
+            </div>
+            
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="testimonial-card bg-gray-50 border border-gray-100 rounded-2xl p-6 h-full">
+              <p class="text-sm text-gray-700 mb-4">
+                “I used Nox AI to spin up a landing page for a weekend project. I had a working site with copy in under 5 minutes. No builder, no drag‑and‑drop headache.”
+              </p>
+              <div class="mt-4">
+                <p class="text-sm font-semibold text-[#0B1F3A]">Rohan Mehta</p>
+                <p class="text-xs text-gray-500">Indie hacker, Pune</p>
+              </div>
+            </div>
+            <div class="testimonial-card bg-gray-50 border border-gray-100 rounded-2xl p-6 h-full">
+              <p class="text-sm text-gray-700 mb-4">
+                “As a marketer, I don’t write HTML. Nox AI gives me a clean Tailwind layout I can hand off directly to our dev without endless Figma rounds.”
+              </p>
+              <div class="mt-4">
+                <p class="text-sm font-semibold text-[#0B1F3A]">Sarah Lopez</p>
+                <p class="text-xs text-gray-500">Growth marketer</p>
+              </div>
+            </div>
+            <div class="testimonial-card bg-gray-50 border border-gray-100 rounded-2xl p-6 h-full">
+              <p class="text-sm text-gray-700 mb-4">
+                “We used Nox AI for quick client mockups. What used to take a dev a day now takes a prompt and a couple of iterations in chat.”
+              </p>
+              <div class="mt-4">
+                <p class="text-sm font-semibold text-[#0B1F3A]">Studio North</p>
+                <p class="text-xs text-gray-500">Design agency</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMPARISON -->
+      <section class="py-20 bg-gray-50">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-[#0B1F3A] mb-4">
+              Nox AI vs hiring a developer
+            </h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+              See how an AI website generator compares to a traditional developer for a simple marketing site.
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-2xl p-6 border border-gray-100">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-[#0B1F3A]">Traditional developer</h3>
+                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Manual build</span>
+              </div>
+              <ul class="space-y-3 text-sm text-gray-600">
+                <li>• Timeline: 2–6 weeks for a 5–10 page business site.</li>
+                <li>• Cost: often ₹75,000–₹3,00,000+ for design and development.</li>
+                <li>• Iterations: requires calls, briefs, and rounds of feedback.</li>
+                <li>• Best for: complex products and fully custom apps.</li>
+              </ul>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 border border-[#0F52BA]/20 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-[#0B1F3A]">Nox AI website generator</h3>
+                <span class="text-xs font-semibold uppercase tracking-[0.2em] text-[#0F52BA]">AI‑powered</span>
+              </div>
+              <ul class="space-y-3 text-sm text-gray-600">
+                <li>• Timeline: 60 seconds for a first draft, minutes to refine.</li>
+                <li>• Cost: predictable pricing, no hourly developer rates.</li>
+                <li>• Iterations: change sections, copy, and style using chat.</li>
+                <li>• Best for: landing pages, marketing sites, portfolios, and quick tests.</li>
+              </ul>
+              <div class="mt-5">
+                <a href="pricing.html"
+                   class="btn-soft inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-medium text-[#0B1F3A]">
+                  View pricing
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINAL CTA BLOCK -->
+      <section class="py-20 bg-gradient-to-r from-[#0F52BA] to-[#14B8A6]">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
+                Launch a new website this hour, not this month.
+              </h2>
+              <p class="text-white/80 max-w-xl">
+                Type a prompt, let Nox AI generate your layout and copy, then download the Tailwind code and deploy anywhere—no builder, no manual setup.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-4 lg:justify-end">
+              <a href="generate.html"
+                 class="bg-white text-[#0B1F3A] px-8 py-3 rounded-full font-medium inline-flex items-center gap-2 btn-soft">
+                Generate Website Now
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+              <a href="signup.html"
+                 class="border border-white/60 text-white px-8 py-3 rounded-full font-medium inline-flex items-center gap-2 btn-soft">
+                Create a free account
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="bg-[#0B1F3A] text-white py-16">
+        <div class="w-full px-4 sm:px-6 lg:px-10 xl:px-16">
+          <div class="grid md:grid-cols-4 gap-12 mb-12">
+            <div class="md:col-span-2">
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10">
+                  <img src="logo.png"
+                       alt="Nox AI logo"
+                       class="w-10 h-10 object-contain">
+                </div>
+                <span class="text-xl font-semibold">Nox AI</span>
+              </div>
+              <p class="text-gray-400 max-w-md mb-6">
+                AI website generator that turns your ideas into Tailwind websites you can copy into any stack.
+              </p>
+            </div>
+
+            <div>
+              <h4 class="font-semibold mb-6">Pages</h4>
+              <ul class="space-y-3 text-sm">
+                <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
+                <li><a href="generate.html" class="text-gray-400 hover:text-white transition-colors">Generate</a></li>
+                <li><a href="pricing.html" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="about.html" class="text-gray-400 hover:text-white transition-colors">About</a></li>
+                <li><a href="signup.html" class="text-gray-400 hover:text-white transition-colors">Sign up</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 class="font-semibold mb-6">Contact</h4>
+              <ul class="space-y-3 text-sm text-gray-400">
+                <li>support@thenoxdigital.com</li>
+                <li>thenoxdigital.com</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="border-t border-white/10 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p class="text-gray-400 text-sm">© 2026 Nox AI. All rights reserved.</p>
+              <div class="flex gap-6 text-sm">
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+    <script>
+      const SUPABASE_URL = "https://ooyouwalbpvqdjvvtsjj.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_T_dsAws2gsGobdqYW8FlNw_HtCveQu4";
+
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      async function refreshAuthUI() {
+        try {
+          const { data } = await supabaseClient.auth.getUser();
+          const user = data.user;
+
+          const navSignupBtn = document.getElementById('navSignupBtn');
+
+          if (user) {
+            if (navSignupBtn) {
+              navSignupBtn.textContent = "Dashboard";
+              navSignupBtn.href = "dashboard.html";
+            }
+          } else {
+            if (navSignupBtn) {
+              navSignupBtn.textContent = "Sign up";
+              navSignupBtn.href = "signup.html";
+            }
+          }
+        } catch (e) {
+          console.error("Error checking auth state", e);
+        }
+      }
+
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileMenu = document.getElementById('mobileMenu');
+
+      if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+        });
+      }
+
+      const nav = document.querySelector('nav');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+          nav.classList.add('shadow-md');
+        } else {
+          nav.classList.remove('shadow-md');
+        }
+      });
+
+      window.addEventListener('load', () => {
+        const overlay = document.getElementById('introOverlay');
+        const wrapper = document.getElementById('introLogoWrapper');
+        const nameEl  = document.getElementById('introName');
+
+        wrapper.style.animation = 'introLogoPop 0.7s ease forwards';
+
+        setTimeout(() => {
+          nameEl.style.animation = 'introTextFade 0.5s ease forwards';
+        }, 800);
+
+        setTimeout(() => {
+          wrapper.style.animation = 'introToHeader 0.7s ease forwards';
+        }, 1500);
+
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          document.body.classList.remove('intro-lock');
+
+          document.querySelectorAll('.fade-in-up').forEach(el => {
+            el.classList.add('animate-in');
+          });
+
+          refreshAuthUI();
+        }, 1700);
+      });
+    </script>
   </body>
 </html>
