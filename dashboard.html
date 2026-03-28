@@ -211,12 +211,14 @@
               </aside>
             </div>
 
-            <!-- Recent activity placeholder -->
+            <!-- Recent activity -->
             <section class="bg-white/95 border border-gray-100 rounded-2xl shadow-lg p-6">
               <h2 class="text-sm font-semibold text-[#0B1F3A] mb-3">Recent activity</h2>
-              <p class="text-xs text-gray-500">
-                Once you hook this to your Supabase tables, you can show a list of recently generated websites here.
-              </p>
+              <div id="recentActivity">
+                <p class="text-xs text-gray-500">
+                  No recent websites yet. Generate a website to see it here.
+                </p>
+              </div>
             </section>
           </div>
         </div>
@@ -296,6 +298,7 @@
         const planDetailEl = document.getElementById('planDetail');
         const creditsEl = document.getElementById('creditsRemaining');
         const websitesEl = document.getElementById('websitesGenerated');
+        const recentActivityEl = document.getElementById('recentActivity');
 
         try {
           // 1) Check auth
@@ -333,6 +336,8 @@
           if (profileError) {
             console.warn('Profile error:', profileError.message);
           } else if (profile) {
+            console.log("PROFILE FROM DB", profile);
+
             const planLabel = profile.current_plan || 'Free';
             const credits = profile.credits_remaining ?? 0;
             const websites = profile.websites_generated ?? 0;
@@ -348,13 +353,42 @@
             if (creditsEl) creditsEl.textContent = credits;
             if (websitesEl) websitesEl.textContent = websites;
           }
+
+          // 3) Load recent activity (last 5 generated sites)
+          if (recentActivityEl) {
+            const { data: activity, error: activityError } = await supabaseClient
+              .from('generated_sites')
+              .select('id, title, created_at')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(5);
+
+            if (activityError || !activity || activity.length === 0) {
+              recentActivityEl.innerHTML = `
+                <p class="text-xs text-gray-500">
+                  No recent websites yet. Generate a website to see it here.
+                </p>
+              `;
+            } else {
+              recentActivityEl.innerHTML = activity.map(item => `
+                <div class="flex items-center justify-between py-2 border-b last:border-b-0 border-gray-100">
+                  <div class="flex flex-col">
+                    <span class="text-xs font-medium text-[#0B1F3A]">${item.title || 'Generated website'}</span>
+                    <span class="text-[11px] text-gray-500">${new Date(item.created_at).toLocaleString()}</span>
+                  </div>
+                  <span class="text-[11px] text-emerald-600 font-medium">Generated</span>
+                </div>
+              `).join('');
+            }
+          }
+
         } catch (e) {
           console.error(e);
           if (subtitle) subtitle.textContent = "Could not load your account.";
         }
       }
 
-      // New: small helper to refresh credits only (can be reused from generate page later)
+      // New: small helper to refresh credits only (can be reused later)
       async function loadCredits() {
         try {
           const { data: { user }, error } = await supabaseClient.auth.getUser();
@@ -379,7 +413,6 @@
 
       document.addEventListener('DOMContentLoaded', () => {
         loadDashboardUser();
-        loadCredits(); // ensure fresh credits from DB
         if (typeof wireLogoutButtonsWithSupabase === 'function') {
           wireLogoutButtonsWithSupabase(supabaseClient);
         }
