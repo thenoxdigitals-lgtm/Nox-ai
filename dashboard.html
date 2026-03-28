@@ -354,8 +354,32 @@
         }
       }
 
+      // New: small helper to refresh credits only (can be reused from generate page later)
+      async function loadCredits() {
+        try {
+          const { data: { user }, error } = await supabaseClient.auth.getUser();
+          if (error || !user) return;
+
+          const { data, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('credits_remaining')
+            .eq('id', user.id)
+            .single();
+
+          if (!profileError && data) {
+            const creditsEl = document.getElementById('creditsRemaining');
+            if (creditsEl) {
+              creditsEl.textContent = data.credits_remaining ?? 0;
+            }
+          }
+        } catch (e) {
+          console.error('loadCredits error', e);
+        }
+      }
+
       document.addEventListener('DOMContentLoaded', () => {
         loadDashboardUser();
+        loadCredits(); // ensure fresh credits from DB
         if (typeof wireLogoutButtonsWithSupabase === 'function') {
           wireLogoutButtonsWithSupabase(supabaseClient);
         }
