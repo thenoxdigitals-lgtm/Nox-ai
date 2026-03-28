@@ -120,7 +120,7 @@
             <a href="about.html" class="block text-sm font-medium text-gray-600 hover:text-[#0B1F3A] py-2">About</a>
             <button
               id="logoutBtnMobile"
-              class="gradient-btn w-full text-center px-6 py-2.5 text-sm font-medium text-white rounded-full mt-4">
+              class="gradient-btn w-full text-center px-6 py-2.5 text-sm font-medium text.white rounded-full mt-4">
               Log out
             </button>
           </div>
@@ -185,7 +185,7 @@
                   </a>
 
                   <a href="pricing.html"
-                     class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg-white">
+                     class="btn-soft inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#0B1F3A] border border-gray-200 bg.white">
                     Upgrade plan
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -300,12 +300,14 @@
         try {
           const { data: userData, error: userError } = await supabaseClient.auth.getUser();
           if (userError || !userData.user) {
+            console.log("No user from auth.getUser, redirecting to signup");
             window.location.href = "signup.html";
             return;
           }
 
           const user = userData.user;
-          const name = user.user_metadata?.name || "Nox user";
+          console.log("AUTH USER", user.id, user.email);
+          const name = user.user_metadata?.name || user.user_metadata?.full_name || "Nox user";
           const email = user.email || "email not set";
 
           if (subtitle) subtitle.textContent = "Welcome back, " + name + ".";
@@ -322,21 +324,32 @@
             initialsEl.textContent = initials;
           }
 
-          // Load profile without .single(), then take first row if present
-          const { data: profiles, error: profileError } = await supabaseClient
+          // First try by id
+          let { data: profiles, error: profileError } = await supabaseClient
             .from('profiles')
-            .select('current_plan, credits_remaining, websites_generated, id')
+            .select('current_plan, credits_remaining, websites_generated, id, email, full_name')
             .eq('id', user.id);
 
-          if (profileError) {
-            console.warn('Profile error:', profileError.message);
-            return;
-          }
+          console.log("PROFILES BY ID", profiles, profileError?.message);
 
-          console.log("PROFILES FROM DB", profiles);
+          // If nothing by id, fall back to email match
+          if ((!profiles || profiles.length === 0) && email && email !== "email not set") {
+            const { data: profilesByEmail, error: emailError } = await supabaseClient
+              .from('profiles')
+              .select('current_plan, credits_remaining, websites_generated, id, email, full_name')
+              .eq('email', email);
+
+            console.log("PROFILES BY EMAIL", profilesByEmail, emailError?.message);
+
+            if (!emailError && profilesByEmail && profilesByEmail.length > 0) {
+              profiles = profilesByEmail;
+            }
+          }
 
           if (profiles && profiles.length > 0) {
             const profile = profiles[0];
+            console.log("USING PROFILE ROW", profile);
+
             const planLabel = profile.current_plan || 'Free';
             const credits = profile.credits_remaining ?? 0;
             const websites = profile.websites_generated ?? 0;
@@ -352,7 +365,7 @@
             if (creditsEl) creditsEl.textContent = credits;
             if (websitesEl) websitesEl.textContent = websites;
           } else {
-            console.warn("No profile row found for user id:", user.id);
+            console.warn("No profile row found for this user by id or email");
           }
 
         } catch (e) {
