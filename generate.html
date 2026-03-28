@@ -252,6 +252,14 @@
                 </div>
               </div>
 
+              <!-- Versions list -->
+              <div class="border-t border-gray-100 px-4 py-2 bg-white/80">
+                <p class="text-[11px] font-medium text-[#0B1F3A] mb-1">Previous versions</p>
+                <div id="versionsList" class="flex flex-wrap gap-1.5 text-[11px] text-gray-700">
+                  <!-- Buttons like "View version 1" will be injected here -->
+                </div>
+              </div>
+
               <form id="chatForm" class="border-t border-gray-100 px-3 sm:px-4 py-3 bg-white/80">
                 <div class="flex items-end gap-2">
                   <div class="flex-1">
@@ -352,6 +360,8 @@
 
       let currentUser = null;
       let currentCredits = null;
+      let latestGeneratedHtml = "";
+      let latestPrompt = "";
 
       async function refreshAuthUI() {
         try {
@@ -373,6 +383,7 @@
 
           if (user) {
             await loadUserCredits(user.id);
+            await loadVersionsList(); // load previous versions on page load
           }
         } catch (e) {
           console.error("Error checking auth state", e);
@@ -398,6 +409,114 @@
           currentCredits = null;
         }
       }
+
+      // Save generated site as a version
+      async function saveGeneratedSite(html, prompt) {
+        try {
+          const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+          if (userError || !userData.user) return;
+          const user = userData.user;
+
+          // Find next version_number for this user
+          const { data: lastRow, error: lastErr } = await supabaseClient
+            .from('generated_sites')
+            .select('version_number')
+            .eq('user_id', user.id)
+            .order('version_number', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (lastErr && lastErr.code !== 'PGRST116') {
+            console.warn('Error fetching last version_number', lastErr.message);
+          }
+
+          const nextVersion = lastRow?.version_number ? lastRow.version_number + 1 : 1;
+          const title = prompt.slice(0, 60);
+
+          const { error: insertError } = await supabaseClient
+            .from('generated_sites')
+            .insert({
+              user_id: user.id,
+              version_number: nextVersion,
+              title,
+              prompt,
+              html
+            });
+
+          if (insertError) {
+            console.error('saveGeneratedSite error', insertError.message);
+          } else {
+            await loadVersionsList(); // refresh versions list UI
+          }
+        } catch (e) {
+          console.error('saveGeneratedSite exception', e);
+        }
+      }
+
+      // Load list of previous versions
+      async function loadVersionsList() {
+        try {
+          const { data: userData } = await supabaseClient.auth.getUser();
+          if (!userData?.user) return;
+          const user = userData.user;
+
+          const { data, error } = await supabaseClient
+            .from('generated_sites')
+            .select('id, title, version_number')
+            .eq('user_id', user.id)
+            .order('version_number', { ascending: false });
+
+          if (error) {
+            console.error('loadVersionsList error', error.message);
+            return;
+          }
+
+          const container = document.getElementById('versionsList');
+          if (!container) return;
+
+          if (!data || data.length === 0) {
+            container.innerHTML = `<span class="text-[11px] text-gray-400">No versions yet.</span>`;
+            return;
+          }
+
+          container.innerHTML = data.map(site => `
+            <button
+              class="px-3 py-1 rounded-full border border-gray-200 bg-white hover:border-[#0F52BA] hover:text-[#0B1F3A] transition"
+              onclick="viewVersion('${site.id}')">
+              View version ${site.version_number}
+            </button>
+          `).join('');
+        } catch (e) {
+          console.error('loadVersionsList exception', e);
+        }
+      }
+
+      // View a previous version
+      async function viewVersion(siteId) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('generated_sites')
+            .select('html, title, prompt, version_number')
+            .eq('id', siteId)
+            .maybeSingle();
+
+          if (error || !data) {
+            console.error('viewVersion error', error?.message);
+            return;
+          }
+
+          latestGeneratedHtml = data.html || "";
+          latestPrompt = data.prompt || "";
+
+          setPreviewHtml(latestGeneratedHtml);
+          appendBotMessage(`Loaded version ${data.version_number}: ${data.title || 'Generated website'}.`);
+        } catch (e) {
+          console.error('viewVersion exception', e);
+        }
+      }
+
+      // Make viewVersion globally available for inline onclick
+      window.viewVersion = viewVersion;
 
       // Layout interactions
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -440,8 +559,6 @@
       const codeOutput = document.getElementById('codeOutput');
       const copyCodeBtn = document.getElementById('copyCodeBtn');
       const quickPromptButtons = document.querySelectorAll('.quick-prompt');
-
-      let latestGeneratedHtml = "";
 
       quickPromptButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -490,7 +607,7 @@
         sendBtn.disabled = loading;
         if (loading) {
           sendIcon.innerHTML = `
-            <svg class="animate-spin h-4 w-4 text:white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor"
                 d="M4 12a8 8 0 018-8v4l3.536-3.536A8.001 8.001 0 014 12z"></path>
@@ -534,6 +651,7 @@
           return;
         }
 
+        latestPrompt = prompt;
         appendUserMessage(prompt);
         userInput.value = '';
         setLoadingState(true);
@@ -571,7 +689,6 @@
             return;
           }
 
-          // If backend returned updated credits, use them; otherwise, pull fresh from Supabase
           if (typeof data.credits_remaining === "number") {
             currentCredits = data.credits_remaining;
           } else if (currentUser) {
@@ -587,6 +704,10 @@
 
           appendBotMessage("Here’s your generated layout. You can view it in the preview or open it as a full page using the button on the right.");
           setPreviewHtml(html);
+
+          // NEW: save this generated site as a version
+          await saveGeneratedSite(html, prompt);
+
         } catch (err) {
           console.error(err);
           appendBotMessage("Something went wrong while generating your website. Please try again.");
