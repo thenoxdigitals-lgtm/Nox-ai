@@ -230,15 +230,15 @@ app.post("/api/generate-site", async (req, res) => {
       ],
     });
 
-    // Guard against missing response
-    if (!result || !result.response) {
-      console.error("Gemini returned no response", result);
+    // In @google/genai, text is available as result.text()
+    if (!result || typeof result.text !== "function") {
+      console.error("Gemini returned unexpected result", result);
       return res
         .status(500)
         .json({ error: "AI generation failed. Please try again." });
     }
 
-    const html = result.response.text();
+    const html = result.text();
     if (!html || !html.trim()) {
       return res
         .status(500)
