@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const Razorpay = require("razorpay");
 const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
-const { GoogleGenAI } = require("@google/genai"); // NEW: Gemini
+const { GoogleGenAI } = require("@google/genai"); // Gemini
 
 // --- Setup basic app ---
 const app = express();
@@ -189,15 +189,18 @@ app.post("/api/generate-site", async (req, res) => {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
-    // 1) Consume a credit via Supabase RPC
+    // 1) Consume a credit via Supabase RPC, passing the user id
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       "consume_credit_and_increment",
-      {}
+      { p_user_id: user.id }
     );
 
     if (rpcError) {
       console.error("consume_credit_and_increment error:", rpcError);
-      if (rpcError.message?.includes("No credits remaining")) {
+      if (
+        rpcError.message?.includes("No credits remaining") ||
+        rpcError.details?.includes("No credits remaining")
+      ) {
         return res.status(402).json({ error: "No credits remaining" });
       }
       return res.status(500).json({ error: "Could not use a credit" });
