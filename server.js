@@ -212,7 +212,7 @@ app.post("/api/generate-site", async (req, res) => {
         : null;
 
     // 2) Call Gemini to generate HTML
-    const response = await genAI.models.generateContent({
+    const result = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
       contents: [
         {
@@ -230,7 +230,8 @@ app.post("/api/generate-site", async (req, res) => {
       ],
     });
 
-    const html = response.text();
+    // For @google/genai, text is on result.response
+    const html = result.response.text();
 
     return res.json({
       html,
