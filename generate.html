@@ -250,13 +250,22 @@
                     Agency website with services & contact
                   </button>
                 </div>
-              </div>
 
-              <!-- Versions list -->
-              <div class="border-t border-gray-100 px-4 py-2 bg-white/80">
-                <p class="text-[11px] font-medium text-[#0B1F3A] mb-1">Previous versions</p>
-                <div id="versionsList" class="flex flex-wrap gap-1.5 text-[11px] text-gray-700">
-                  <!-- Buttons like "View version 1" will be injected here -->
+                <!-- loading / thinking bubble -->
+                <div id="loadingBubble" class="hidden pl-10">
+                  <div class="flex gap-3 items-start">
+                    <div class="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#0F52BA] to-[#14B8A6] text-[11px] font-semibold text-white">
+                      N
+                    </div>
+                    <div class="max-w-[80%] rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-800 shadow-sm flex items-center gap-2">
+                      <span class="text-xs text-gray-500">Thinking & generating your layout…</span>
+                      <span class="flex gap-1">
+                        <span class="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce"></span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.15s]"></span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce [animation-delay:0.3s]"></span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -328,6 +337,17 @@
                 </div>
               </div>
 
+              <!-- Versions list -->
+              <div class="bg-white/95 border border-gray-100 rounded-2xl shadow-lg px-4 py-3">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-xs font-medium text-[#0B1F3A]">Previous versions</p>
+                  <span class="text-[11px] text-gray-400">Latest first</span>
+                </div>
+                <div id="versionsList" class="flex flex-wrap gap-2 text-[11px] text-gray-700">
+                  <span class="text-[11px] text-gray-400">Generate a website to see versions here.</span>
+                </div>
+              </div>
+
             </section>
           </div>
         </div>
@@ -360,8 +380,6 @@
 
       let currentUser = null;
       let currentCredits = null;
-      let latestGeneratedHtml = "";
-      let latestPrompt = "";
 
       async function refreshAuthUI() {
         try {
@@ -383,7 +401,7 @@
 
           if (user) {
             await loadUserCredits(user.id);
-            await loadVersionsList(); // load previous versions on page load
+            await loadVersionsList();
           }
         } catch (e) {
           console.error("Error checking auth state", e);
@@ -410,15 +428,67 @@
         }
       }
 
-      // Save generated site as a version
+      async function loadVersionsList() {
+        if (!currentUser) return;
+        try {
+          const { data, error } = await supabaseClient
+            .from('generated_sites')
+            .select('id, title, version_number')
+            .eq('user_id', currentUser.id)
+            .order('version_number', { ascending: false });
+
+          const container = document.getElementById('versionsList');
+          if (error) {
+            console.error('loadVersionsList error', error.message);
+            container.innerHTML = '<span class="text-[11px] text-red-500">Failed to load versions.</span>';
+            return;
+          }
+
+          if (!data || data.length === 0) {
+            container.innerHTML = '<span class="text-[11px] text-gray-400">Generate a website to see versions here.</span>';
+            return;
+          }
+
+          container.innerHTML = data.map(site => `
+            <button
+              class="px-3 py-1 rounded-full border border-gray-200 bg-white hover:bg-gray-50 hover:border-[#0F52BA] transition"
+              onclick="viewVersion('${site.id}')">
+              View version ${site.version_number}${site.title ? ' – ' + site.title : ''}
+            </button>
+          `).join('');
+        } catch (e) {
+          console.error('loadVersionsList error', e);
+        }
+      }
+
+      async function viewVersion(siteId) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('generated_sites')
+            .select('html, title, prompt, version_number')
+            .eq('id', siteId)
+            .maybeSingle();
+
+          if (error || !data) {
+            console.error('viewVersion error', error?.message);
+            return;
+          }
+
+          appendBotMessage(`Loaded version ${data.version_number}${data.title ? ' – ' + data.title : ''} from your history.`);
+          setPreviewHtml(data.html || '');
+        } catch (e) {
+          console.error('viewVersion error', e);
+        }
+      }
+
       async function saveGeneratedSite(html, prompt) {
         try {
           const { data: userData, error: userError } = await supabaseClient.auth.getUser();
           if (userError || !userData.user) return;
+
           const user = userData.user;
 
-          // Find next version_number for this user
-          const { data: lastRow, error: lastErr } = await supabaseClient
+          const { data: lastRow } = await supabaseClient
             .from('generated_sites')
             .select('version_number')
             .eq('user_id', user.id)
@@ -426,12 +496,9 @@
             .limit(1)
             .maybeSingle();
 
-          if (lastErr && lastErr.code !== 'PGRST116') {
-            console.warn('Error fetching last version_number', lastErr.message);
-          }
+          const nextVersion = lastRow && lastRow.version_number ? lastRow.version_number + 1 : 1;
 
-          const nextVersion = lastRow?.version_number ? lastRow.version_number + 1 : 1;
-          const title = prompt.slice(0, 60);
+          const title = (prompt || '').slice(0, 60);
 
           const { error: insertError } = await supabaseClient
             .from('generated_sites')
@@ -446,77 +513,12 @@
           if (insertError) {
             console.error('saveGeneratedSite error', insertError.message);
           } else {
-            await loadVersionsList(); // refresh versions list UI
+            await loadVersionsList();
           }
         } catch (e) {
-          console.error('saveGeneratedSite exception', e);
+          console.error('saveGeneratedSite error', e);
         }
       }
-
-      // Load list of previous versions
-      async function loadVersionsList() {
-        try {
-          const { data: userData } = await supabaseClient.auth.getUser();
-          if (!userData?.user) return;
-          const user = userData.user;
-
-          const { data, error } = await supabaseClient
-            .from('generated_sites')
-            .select('id, title, version_number')
-            .eq('user_id', user.id)
-            .order('version_number', { ascending: false });
-
-          if (error) {
-            console.error('loadVersionsList error', error.message);
-            return;
-          }
-
-          const container = document.getElementById('versionsList');
-          if (!container) return;
-
-          if (!data || data.length === 0) {
-            container.innerHTML = `<span class="text-[11px] text-gray-400">No versions yet.</span>`;
-            return;
-          }
-
-          container.innerHTML = data.map(site => `
-            <button
-              class="px-3 py-1 rounded-full border border-gray-200 bg-white hover:border-[#0F52BA] hover:text-[#0B1F3A] transition"
-              onclick="viewVersion('${site.id}')">
-              View version ${site.version_number}
-            </button>
-          `).join('');
-        } catch (e) {
-          console.error('loadVersionsList exception', e);
-        }
-      }
-
-      // View a previous version
-      async function viewVersion(siteId) {
-        try {
-          const { data, error } = await supabaseClient
-            .from('generated_sites')
-            .select('html, title, prompt, version_number')
-            .eq('id', siteId)
-            .maybeSingle();
-
-          if (error || !data) {
-            console.error('viewVersion error', error?.message);
-            return;
-          }
-
-          latestGeneratedHtml = data.html || "";
-          latestPrompt = data.prompt || "";
-
-          setPreviewHtml(latestGeneratedHtml);
-          appendBotMessage(`Loaded version ${data.version_number}: ${data.title || 'Generated website'}.`);
-        } catch (e) {
-          console.error('viewVersion exception', e);
-        }
-      }
-
-      // Make viewVersion globally available for inline onclick
-      window.viewVersion = viewVersion;
 
       // Layout interactions
       const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -559,6 +561,9 @@
       const codeOutput = document.getElementById('codeOutput');
       const copyCodeBtn = document.getElementById('copyCodeBtn');
       const quickPromptButtons = document.querySelectorAll('.quick-prompt');
+      const loadingBubble = document.getElementById('loadingBubble');
+
+      let latestGeneratedHtml = "";
 
       quickPromptButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -574,7 +579,7 @@
 
         wrapper.innerHTML = `
           <div class="max-w-[80%] rounded-2xl bg-[#0F52BA] px-4 py-2.5 text-sm text-white shadow">
-            ${text.replace(/\\n/g, '<br>')}
+            ${text.replace(/\\\\n/g, '<br>')}
           </div>
           <div class="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold text-[#0B1F3A]">
             You
@@ -613,11 +618,13 @@
                 d="M4 12a8 8 0 018-8v4l3.536-3.536A8.001 8.001 0 014 12z"></path>
             </svg>
           `;
+          if (loadingBubble) loadingBubble.classList.remove('hidden');
         } else {
           sendIcon.innerHTML = `
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M5 12h14M12 5l7 7-7 7" />
           `;
+          if (loadingBubble) loadingBubble.classList.add('hidden');
         }
       }
 
@@ -651,7 +658,6 @@
           return;
         }
 
-        latestPrompt = prompt;
         appendUserMessage(prompt);
         userInput.value = '';
         setLoadingState(true);
@@ -705,9 +711,8 @@
           appendBotMessage("Here’s your generated layout. You can view it in the preview or open it as a full page using the button on the right.");
           setPreviewHtml(html);
 
-          // NEW: save this generated site as a version
+          // save version + refresh versions list
           await saveGeneratedSite(html, prompt);
-
         } catch (err) {
           console.error(err);
           appendBotMessage("Something went wrong while generating your website. Please try again.");
