@@ -230,19 +230,33 @@ app.post("/api/generate-site", async (req, res) => {
       ],
     });
 
-    // In @google/genai, text is available as result.text()
-    if (!result || typeof result.text !== "function") {
-      console.error("Gemini returned unexpected result", result);
-      return res
-        .status(500)
-        .json({ error: "AI generation failed. Please try again." });
+    console.log("GEMINI RAW RESULT =", JSON.stringify(result, null, 2));
+
+    let html = "";
+    try {
+      if (result && typeof result.text === "function") {
+        html = result.text();
+      } else if (result && result.response && typeof result.response.text === "function") {
+        html = result.response.text();
+      } else if (
+        result &&
+        result.candidates &&
+        result.candidates[0] &&
+        result.candidates[0].content &&
+        result.candidates[0].content.parts &&
+        result.candidates[0].content.parts[0] &&
+        typeof result.candidates[0].content.parts[0].text === "string"
+      ) {
+        html = result.candidates[0].content.parts[0].text;
+      }
+    } catch (e) {
+      console.error("Error extracting HTML from Gemini result:", e);
     }
 
-    const html = result.text();
     if (!html || !html.trim()) {
       return res
         .status(500)
-        .json({ error: "AI returned empty HTML. Try a different prompt." });
+        .json({ error: "AI returned empty or unreadable HTML. Try a different prompt." });
     }
 
     return res.json({
