@@ -31,9 +31,21 @@ const genAI = new GoogleGenAI({
 });
 
 const PLAN_CREDITS = {
-  plan_SW4tX6wgjb7Xpv: { name: "monthly", credits: 200 },
-  plan_SW4troEOKKCe9T: { name: "yearly", credits: 250 },
-  plan_SW4uE4Hw33PD3K: { name: "3year", credits: 300 },
+  plan_SW4tX6wgjb7Xpv: {
+    name: "monthly",
+    credits: 200,
+    total_count: 12
+  },
+  plan_SW4troEOKKCe9T: {
+    name: "yearly",
+    credits: 250,
+    total_count: 10
+  },
+  plan_SW4uE4Hw33PD3K: {
+    name: "3year",
+    credits: 300,
+    total_count: 10
+  },
 };
 
 async function getUserFromToken(req) {
@@ -75,7 +87,7 @@ app.post("/create-subscription", async (req, res) => {
 
     const subscription = await razorpayInstance.subscriptions.create({
       plan_id,
-      total_count: 120,
+      total_count: planMeta.total_count,
       customer_notify: 1,
       notes: {
         supabase_user_id,
@@ -89,6 +101,7 @@ app.post("/create-subscription", async (req, res) => {
       plan_id,
       supabase_user_id,
       notes: subscription.notes,
+      total_count: planMeta.total_count
     });
 
     const { error: subError } = await supabase
@@ -124,7 +137,12 @@ app.post("/create-subscription", async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating subscription:", err);
-    return res.status(500).json({ error: "Failed to create subscription" });
+    return res.status(500).json({
+      error:
+        err?.error?.description ||
+        err?.description ||
+        "Failed to create subscription"
+    });
   }
 });
 
@@ -261,8 +279,6 @@ async function addCreditsIfNotAlreadyGiven({
   const txNote = cycleStart
     ? `${eventType}:${subscriptionId}:${cycleStart}`
     : `${eventType}:${uniqueRef}`;
-
-  console.log("Checking duplicate transaction with note:", txNote);
 
   const { data: existingTx, error: existingTxError } = await supabase
     .from("credit_transactions")
