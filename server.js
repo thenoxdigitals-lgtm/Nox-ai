@@ -122,7 +122,7 @@ app.post("/create-subscription", async (req, res) => {
 
 app.post("/razorpay-webhook", async (req, res) => {
   try {
-    const webhookSecret = process.env.jympXYi4jtW67WHY0Z04yUIK;
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
       console.error("Missing RAZORPAY_WEBHOOK_SECRET in environment");
@@ -169,9 +169,22 @@ app.post("/razorpay-webhook", async (req, res) => {
       const planMeta = PLAN_CREDITS[razorpayPlanId];
       if (!planMeta) {
         console.error("No PLAN_CREDITS mapping for plan:", razorpayPlanId);
+        return res.json({ status: "ignored" });
       }
 
-      const creditsToAdd = planMeta?.credits || 0;
+      const creditsToAdd = planMeta.credits;
+
+      const { data: existingSubscription, error: fetchSubError } = await supabase
+        .from("user_subscriptions")
+        .select("status")
+        .eq("razorpay_subscription_id", razorpaySubscriptionId)
+        .maybeSingle();
+
+      if (fetchSubError) {
+        console.error("Error reading existing subscription:", fetchSubError);
+      }
+
+      const previousStatus = existingSubscription?.status || null;
 
       const { error: upsertError } = await supabase
         .from("user_subscriptions")
@@ -180,7 +193,7 @@ app.post("/razorpay-webhook", async (req, res) => {
             user_id: supabaseUserId,
             razorpay_subscription_id: razorpaySubscriptionId,
             razorpay_plan_id: razorpayPlanId,
-            plan_name: planMeta?.name || null,
+            plan_name: planMeta.name,
             credits_per_cycle: creditsToAdd,
             status: subscriptionObj.status,
             current_cycle_started_at: subscriptionObj.current_start
@@ -198,7 +211,11 @@ app.post("/razorpay-webhook", async (req, res) => {
         console.error("Error upserting user_subscriptions in webhook:", upsertError);
       }
 
-      if (creditsToAdd > 0) {
+      const shouldAddCredits =
+        (eventType === "subscription.activated" && previousStatus !== "active") ||
+        eventType === "subscription.charged";
+
+      if (shouldAddCredits && creditsToAdd > 0) {
         const { data: existingCredits, error: creditsError } = await supabase
           .from("user_credits")
           .select("credits")
@@ -229,6 +246,7 @@ app.post("/razorpay-webhook", async (req, res) => {
             .insert({
               user_id: supabaseUserId,
               credits: creditsToAdd,
+              updated_at: new Date().toISOString(),
             });
 
           if (insertCreditsError) {
@@ -241,8 +259,11 @@ app.post("/razorpay-webhook", async (req, res) => {
           .insert({
             user_id: supabaseUserId,
             amount: creditsToAdd,
-            type: "plan_credit",
-            note: `Credits added for ${planMeta?.name || "subscription"} plan`,
+            type: eventType === "subscription.charged" ? "monthly_refresh" : "plan_credit",
+            note:
+              eventType === "subscription.charged"
+                ? `Monthly credits added for ${planMeta.name} plan`
+                : `Credits added for ${planMeta.name} plan purchase`,
           });
 
         if (txError) {
