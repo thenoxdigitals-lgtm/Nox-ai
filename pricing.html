@@ -559,11 +559,33 @@
             notes: {
               supabase_user_id: user.id
             },
-            handler: function (response) {
-              console.log("Payment success:", response);
-              alert("Payment successful. Your credits will be updated in a few seconds.\nRedirecting you to your dashboard…");
-              window.location.href = "dashboard.html";
-            },
+            handler: async function (response) {
+  try {
+    console.log("Payment success:", response);
+
+    const verifyRes = await fetch(`${BACKEND_URL}/verify-subscription-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subscription_id: json.subscription_id,
+        supabase_user_id: user.id
+      })
+    });
+
+    const verifyJson = await verifyRes.json();
+
+    if (!verifyRes.ok) {
+      alert(verifyJson.error || "Payment succeeded, but credit verification failed.");
+      return;
+    }
+
+    alert("Payment successful and credits added.\nRedirecting you to dashboard…");
+    window.location.href = "dashboard.html";
+  } catch (err) {
+    console.error(err);
+    alert("Payment succeeded, but we could not verify credits automatically.");
+  }
+},
             prefill: {
               email: user.email || ""
             },
