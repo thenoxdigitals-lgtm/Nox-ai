@@ -56,12 +56,14 @@ app.get("/", (req, res) => {
   res.send("Nox backend is running");
 });
 
-// Plan → credits mapping
+// Plan → credits mapping (match PRICING.HTML plan IDs)
 const PLAN_CREDITS = {
-  // use your real Razorpay plan IDs here:
-  "plan_SVRRQoK3FvsFY2": { name: "monthly", credits: 200 },
-  "plan_SVRSPwR7DTzHEH": { name: "yearly", credits: 250 },
-  "plan_SVRTWBZ5tiA87t": { name: "3year", credits: 300 },
+  // 1 month
+  "plan_SW4tX6wgjb7Xpv": { name: "monthly", credits: 200 },
+  // 12 months
+  "plan_SW4troEOKKCe9T": { name: "yearly", credits: 250 },
+  // 3 years
+  "plan_SW4uE4Hw33PD3K": { name: "3year", credits: 300 },
 };
 
 // ========== 1) CREATE SUBSCRIPTION ==========
@@ -147,7 +149,7 @@ app.post("/razorpay-webhook", async (req, res) => {
     const eventType = event.event;
     const payload = event.payload || {};
 
-    // We care about subscription activated/charged (first payment and renewals)
+    // Handle subscription activation / recurring charge
     if (
       eventType === "subscription.activated" ||
       eventType === "subscription.charged"
