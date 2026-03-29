@@ -70,7 +70,6 @@ app.post("/create-subscription", async (req, res) => {
       return res.status(400).json({ error: "User not logged in" });
     }
 
-    // total_count must be >= 1
     const subscription = await razorpayInstance.subscriptions.create({
       plan_id: plan_id,
       total_count: 1,
@@ -101,10 +100,15 @@ app.post("/create-subscription", async (req, res) => {
 // ========== 2) RAZORPAY WEBHOOK ENDPOINT ==========
 app.post("/razorpay-webhook", async (req, res) => {
   try {
-    const webhookSecret = "your_webhook_secret_here"; // TODO: put in env
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error("Missing RAZORPAY_WEBHOOK_SECRET in environment");
+      return res.status(500).send("Webhook secret not configured");
+    }
 
     const signature = req.headers["x-razorpay-signature"];
-    const body = req.body; // raw body
+    const body = req.body;
 
     const expectedSignature = crypto
       .createHmac("sha256", webhookSecret)
@@ -133,14 +137,13 @@ app.post("/razorpay-webhook", async (req, res) => {
         let creditsToAdd = 0;
 
         if (subscriptionObj.plan_id === "plan_SVRRQoK3FvsFY2") {
-          creditsToAdd = 200; // monthly
+          creditsToAdd = 200; // ₹199 plan
         } else if (subscriptionObj.plan_id === "plan_SVRSPwR7DTzHEH") {
           creditsToAdd = 250; // yearly
         } else if (subscriptionObj.plan_id === "plan_SVRTWBZ5tiA87t") {
           creditsToAdd = 300; // 3 years
         }
 
-        // 1) Update subscriptions table
         await supabase
           .from("subscriptions")
           .update({
@@ -148,7 +151,6 @@ app.post("/razorpay-webhook", async (req, res) => {
           })
           .eq("razorpay_subscription_id", razorpaySubscriptionId);
 
-        // 2) Add credits to user
         if (creditsToAdd > 0) {
           const { data: profile } = await supabase
             .from("profiles")
@@ -189,7 +191,6 @@ app.post("/api/generate-site", async (req, res) => {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
-    // 1) Consume a credit via Supabase RPC, passing the user id
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       "consume_credit_and_increment",
       { p_user_id: user.id }
@@ -211,7 +212,6 @@ app.post("/api/generate-site", async (req, res) => {
         ? rpcData[0].credits_remaining
         : null;
 
-    // 2) Call Gemini to generate HTML
     const result = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
       contents: [
