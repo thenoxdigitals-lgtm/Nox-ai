@@ -220,8 +220,19 @@
                   <input
                     type="password"
                     name="password"
+                    id="signupPassword"
                     class="input-field w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900"
                     placeholder="Minimum 8 characters"
+                    required>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-700 mb-1">Confirm password</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    id="signupConfirmPassword"
+                    class="input-field w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900"
+                    placeholder="Re-enter your password"
                     required>
                 </div>
 
@@ -284,7 +295,7 @@
                     <input type="checkbox" class="rounded border-gray-300">
                     <span>Keep me logged in</span>
                   </label>
-                  <a href="#" class="text-[#0F52BA] hover:underline">Forgot password?</a>
+                  <a href="#" id="forgotPasswordLink" class="text-[#0F52BA] hover:underline">Forgot password?</a>
                 </div>
 
                 <button
@@ -374,6 +385,7 @@
       const authError = document.getElementById('authError');
       const signupSubmit = document.getElementById('signupSubmit');
       const loginSubmit = document.getElementById('loginSubmit');
+      const forgotPasswordLink = document.getElementById('forgotPasswordLink');
 
       function showError(message) {
         authError.textContent = message;
@@ -388,13 +400,13 @@
       function setLoading(button, isLoading) {
         if (!button) return;
         if (isLoading) {
-          button.dataset.originalText = button.textContent;
-          button.textContent = "Please wait...";
+          button.dataset.originalHtml = button.innerHTML;
+          button.innerHTML = "Please wait...";
           button.disabled = true;
           button.classList.add('opacity-70', 'cursor-not-allowed');
         } else {
-          if (button.dataset.originalText) {
-            button.textContent = button.dataset.originalText;
+          if (button.dataset.originalHtml) {
+            button.innerHTML = button.dataset.originalHtml;
           }
           button.disabled = false;
           button.classList.remove('opacity-70', 'cursor-not-allowed');
@@ -475,9 +487,20 @@
         const name = formData.get('name')?.toString().trim();
         const email = formData.get('email')?.toString().trim();
         const password = formData.get('password')?.toString();
+        const confirmPassword = formData.get('confirmPassword')?.toString();
 
-        if (!email || !password) {
-          showError("Please enter email and password.");
+        if (!email || !password || !confirmPassword) {
+          showError("Please fill all required fields.");
+          return;
+        }
+
+        if (password.length < 8) {
+          showError("Password must be at least 8 characters.");
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          showError("Password and confirm password do not match.");
           return;
         }
 
@@ -497,7 +520,6 @@
           return;
         }
 
-        // Profile row will be created automatically by Supabase trigger.
         alert("Account created. Please check your email and click the link to confirm your address before logging in.");
         signupForm.reset();
       });
@@ -528,6 +550,31 @@
         }
 
         window.location.href = "dashboard.html";
+      });
+
+      // FORGOT PASSWORD
+      forgotPasswordLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        clearError();
+
+        const emailInput = loginForm.querySelector('input[name="email"]');
+        const email = emailInput?.value?.trim();
+
+        if (!email) {
+          showError("Enter your email in the login form first, then click Forgot password.");
+          return;
+        }
+
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: "https://thenoxdigital.com/reset-password.html"
+        });
+
+        if (error) {
+          showError(error.message || "Could not send reset password email.");
+          return;
+        }
+
+        alert("Password reset email sent. Please check your inbox.");
       });
 
       // GOOGLE SIGN IN (placeholder)
