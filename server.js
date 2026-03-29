@@ -80,7 +80,11 @@ app.post("/create-subscription", async (req, res) => {
       return res.status(400).json({ error: "User not logged in" });
     }
 
-    const planMeta = PLAN_CREDITS[plan_id] || { name: null, credits: 0 };
+    const planMeta = PLAN_CREDITS[plan_id];
+
+    if (!planMeta) {
+      return res.status(400).json({ error: "Unknown plan_id" });
+    }
 
     // Create Razorpay subscription and store supabase_user_id + plan_id in notes
     const subscription = await razorpayInstance.subscriptions.create({
@@ -93,21 +97,31 @@ app.post("/create-subscription", async (req, res) => {
       },
     });
 
-    // Store subscription info in user_subscriptions
-    await supabase.from("user_subscriptions").insert({
-      user_id: supabase_user_id,
-      razorpay_subscription_id: subscription.id,
-      razorpay_plan_id: plan_id,
-      plan_name: planMeta.name,
-      credits_per_cycle: planMeta.credits,
-      status: subscription.status,
-      current_cycle_started_at: subscription.current_start
-        ? new Date(subscription.current_start * 1000).toISOString()
-        : null,
-      current_cycle_ends_at: subscription.current_end
-        ? new Date(subscription.current_end * 1000).toISOString()
-        : null,
-    });
+    // Upsert subscription info into user_subscriptions so we don't duplicate rows
+    const { error: subError } = await supabase
+      .from("user_subscriptions")
+      .upsert(
+        {
+          user_id: supabase_user_id,
+          razorpay_subscription_id: subscription.id,
+          razorpay_plan_id: plan_id,
+          plan_name: planMeta.name,
+          credits_per_cycle: planMeta.credits,
+          status: subscription.status,
+          current_cycle_started_at: subscription.current_start
+            ? new Date(subscription.current_start * 1000).toISOString()
+            : null,
+          current_cycle_ends_at: subscription.current_end
+            ? new Date(subscription.current_end * 1000).toISOString()
+            : null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "razorpay_subscription_id" }
+      );
+
+    if (subError) {
+      console.error("Error upserting user_subscriptions:", subError);
+    }
 
     return res.json({
       subscription_id: subscription.id,
@@ -178,7 +192,7 @@ app.post("/razorpay-webhook", async (req, res) => {
       const creditsToAdd = planMeta?.credits || 0;
 
       // Update user_subscriptions row
-      await supabase
+      const { error: upsertError } = await supabase
         .from("user_subscriptions")
         .upsert(
           {
@@ -199,6 +213,10 @@ app.post("/razorpay-webhook", async (req, res) => {
           { onConflict: "razorpay_subscription_id" }
         );
 
+      if (upsertError) {
+        console.error("Error upserting user_subscriptions in webhook:", upsertError);
+      }
+
       // Add credits to user_credits
       if (creditsToAdd > 0) {
         const { data: existingCredits, error: creditsError } = await supabase
@@ -214,29 +232,43 @@ app.post("/razorpay-webhook", async (req, res) => {
         const currentCredits = existingCredits?.credits || 0;
 
         if (existingCredits) {
-          await supabase
+          const { error: updateCreditsError } = await supabase
             .from("user_credits")
             .update({
               credits: currentCredits + creditsToAdd,
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", supabaseUserId);
+
+          if (updateCreditsError) {
+            console.error("Error updating user_credits:", updateCreditsError);
+          }
         } else {
-          await supabase
+          const { error: insertCreditsError } = await supabase
             .from("user_credits")
             .insert({
               user_id: supabaseUserId,
               credits: creditsToAdd,
             });
+
+          if (insertCreditsError) {
+            console.error("Error inserting user_credits:", insertCreditsError);
+          }
         }
 
         // Insert into credit_transactions
-        await supabase.from("credit_transactions").insert({
-          user_id: supabaseUserId,
-          amount: creditsToAdd,
-          type: "plan_credit",
-          note: `Credits added for ${planMeta?.name || "subscription"} plan`,
-        });
+        const { error: txError } = await supabase
+          .from("credit_transactions")
+          .insert({
+            user_id: supabaseUserId,
+            amount: creditsToAdd,
+            type: "plan_credit",
+            note: `Credits added for ${planMeta?.name || "subscription"} plan`,
+          });
+
+        if (txError) {
+          console.error("Error inserting credit_transactions:", txError);
+        }
       }
     }
 
