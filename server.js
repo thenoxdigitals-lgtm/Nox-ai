@@ -146,6 +146,154 @@ app.post("/create-subscription", async (req, res) => {
   }
 });
 
+app.post("/verify-subscription-payment", async (req, res) => {
+  try {
+    const { subscription_id, supabase_user_id } = req.body;
+
+    if (!subscription_id || !supabase_user_id) {
+      return res.status(400).json({
+        error: "subscription_id and supabase_user_id are required"
+      });
+    }
+
+    const subscription = await razorpayInstance.subscriptions.fetch(subscription_id);
+
+    console.log("Fetched subscription for verification:", subscription);
+
+    const planId =
+      subscription.plan_id ||
+      subscription.notes?.plan_id ||
+      null;
+
+    const userId =
+      subscription.notes?.supabase_user_id || supabase_user_id;
+
+    if (!planId || !userId) {
+      return res.status(400).json({
+        error: "Could not resolve plan or user from subscription"
+      });
+    }
+
+    const planMeta = PLAN_CREDITS[planId];
+    if (!planMeta) {
+      return res.status(400).json({
+        error: "Unknown plan mapping"
+      });
+    }
+
+    const txNote = `manual_verify:${subscription_id}`;
+
+    const { data: existingTx, error: existingTxError } = await supabase
+      .from("credit_transactions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("type", "plan_credit")
+      .eq("note", txNote)
+      .maybeSingle();
+
+    if (existingTxError) {
+      console.error("Error checking existing verify transaction:", existingTxError);
+      return res.status(500).json({ error: "Failed to check existing transaction" });
+    }
+
+    if (existingTx) {
+      return res.json({
+        ok: true,
+        message: "Credits already added",
+        duplicate: true
+      });
+    }
+
+    const { error: subError } = await supabase
+      .from("user_subscriptions")
+      .upsert(
+        {
+          user_id: userId,
+          razorpay_subscription_id: subscription.id,
+          razorpay_plan_id: planId,
+          plan_name: planMeta.name,
+          credits_per_cycle: planMeta.credits,
+          status: subscription.status,
+          current_cycle_started_at: subscription.current_start
+            ? new Date(subscription.current_start * 1000).toISOString()
+            : null,
+          current_cycle_ends_at: subscription.current_end
+            ? new Date(subscription.current_end * 1000).toISOString()
+            : null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "razorpay_subscription_id" }
+      );
+
+    if (subError) {
+      console.error("Subscription upsert error in verify route:", subError);
+      return res.status(500).json({ error: "Failed to update subscription" });
+    }
+
+    const { data: existingCredits, error: existingCreditsError } = await supabase
+      .from("user_credits")
+      .select("credits")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (existingCreditsError) {
+      console.error("Credits read error in verify route:", existingCreditsError);
+      return res.status(500).json({ error: "Failed to read credits" });
+    }
+
+    if (existingCredits) {
+      const { error: updateCreditsError } = await supabase
+        .from("user_credits")
+        .update({
+          credits: existingCredits.credits + planMeta.credits,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+
+      if (updateCreditsError) {
+        console.error("Credits update error in verify route:", updateCreditsError);
+        return res.status(500).json({ error: "Failed to update credits" });
+      }
+    } else {
+      const { error: insertCreditsError } = await supabase
+        .from("user_credits")
+        .insert({
+          user_id: userId,
+          credits: planMeta.credits,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (insertCreditsError) {
+        console.error("Credits insert error in verify route:", insertCreditsError);
+        return res.status(500).json({ error: "Failed to insert credits" });
+      }
+    }
+
+    const { error: txError } = await supabase
+      .from("credit_transactions")
+      .insert({
+        user_id: userId,
+        amount: planMeta.credits,
+        type: "plan_credit",
+        note: txNote,
+      });
+
+    if (txError) {
+      console.error("Transaction insert error in verify route:", txError);
+      return res.status(500).json({ error: "Failed to insert transaction" });
+    }
+
+    return res.json({
+      ok: true,
+      message: "Credits added successfully",
+      credits_added: planMeta.credits
+    });
+  } catch (err) {
+    console.error("verify-subscription-payment error:", err);
+    return res.status(500).json({ error: "Verification failed" });
+  }
+});
+
 async function getWebhookContext(event) {
   const payload = event.payload || {};
   const eventType = event.event;
@@ -348,10 +496,10 @@ async function addCreditsIfNotAlreadyGiven({
       note: txNote,
     });
 
-  if (txError) {
-    console.error("Error inserting credit_transactions:", txError);
-    return { ok: false, reason: "tx_insert_failed" };
-  }
+    if (txError) {
+      console.error("Error inserting credit_transactions:", txError);
+      return { ok: false, reason: "tx_insert_failed" };
+    }
 
   console.log("Credits added successfully:", {
     userId,
