@@ -295,7 +295,7 @@
                     <input type="checkbox" class="rounded border-gray-300">
                     <span>Keep me logged in</span>
                   </label>
-                  <a href="#" id="forgotPasswordLink" class="text-[#0F52BA] hover:underline">Forgot password?</a>
+                  <a href="forgot-password.html" id="forgotPasswordLink" class="text-[#0F52BA] hover:underline">Forgot password?</a>
                 </div>
 
                 <button
@@ -385,7 +385,6 @@
       const authError = document.getElementById('authError');
       const signupSubmit = document.getElementById('signupSubmit');
       const loginSubmit = document.getElementById('loginSubmit');
-      const forgotPasswordLink = document.getElementById('forgotPasswordLink');
 
       function showError(message) {
         authError.textContent = message;
@@ -550,31 +549,6 @@
         }
 
         window.location.href = "dashboard.html";
-      });
-
-      // FORGOT PASSWORD
-      forgotPasswordLink.addEventListener('click', async (e) => {
-        e.preventDefault();
-        clearError();
-
-        const emailInput = loginForm.querySelector('input[name="email"]');
-        const email = emailInput?.value?.trim();
-
-        if (!email) {
-          showError("Enter your email in the login form first, then click Forgot password.");
-          return;
-        }
-
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-          redirectTo: "https://thenoxdigital.com/reset-password.html"
-        });
-
-        if (error) {
-          showError(error.message || "Could not send reset password email.");
-          return;
-        }
-
-        alert("Password reset email sent. Please check your inbox.");
       });
 
       // GOOGLE SIGN IN (placeholder)
