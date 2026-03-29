@@ -83,6 +83,14 @@ app.post("/create-subscription", async (req, res) => {
       },
     });
 
+    console.log("Subscription created:", {
+      id: subscription.id,
+      status: subscription.status,
+      plan_id,
+      supabase_user_id,
+      notes: subscription.notes,
+    });
+
     const { error: subError } = await supabase
       .from("user_subscriptions")
       .upsert(
@@ -142,6 +150,7 @@ function getWebhookContext(event) {
 
   const planId =
     subscriptionEntity?.plan_id ||
+    invoiceEntity?.line_items?.[0]?.plan_id ||
     notes.plan_id ||
     null;
 
@@ -185,6 +194,7 @@ function getWebhookContext(event) {
     cycleEnd,
     status,
     uniqueRef,
+    rawNotes: notes,
   };
 }
 
@@ -201,7 +211,7 @@ async function addCreditsIfNotAlreadyGiven({
   const planMeta = PLAN_CREDITS[planId];
   if (!planMeta) {
     console.error("No PLAN_CREDITS mapping for plan:", planId);
-    return;
+    return { ok: false, reason: "unknown_plan" };
   }
 
   const creditsToAdd = planMeta.credits;
@@ -225,11 +235,14 @@ async function addCreditsIfNotAlreadyGiven({
 
   if (upsertError) {
     console.error("Error upserting user_subscriptions:", upsertError);
+    return { ok: false, reason: "subscription_upsert_failed" };
   }
 
   const txNote = cycleStart
     ? `${eventType}:${subscriptionId}:${cycleStart}`
     : `${eventType}:${uniqueRef}`;
+
+  console.log("Checking duplicate transaction with note:", txNote);
 
   const { data: existingTx, error: existingTxError } = await supabase
     .from("credit_transactions")
@@ -241,11 +254,12 @@ async function addCreditsIfNotAlreadyGiven({
 
   if (existingTxError) {
     console.error("Error checking existing credit transaction:", existingTxError);
+    return { ok: false, reason: "existing_tx_check_failed" };
   }
 
   if (existingTx) {
     console.log("Credits already added for this cycle/event, skipping:", txNote);
-    return;
+    return { ok: true, reason: "duplicate_skipped" };
   }
 
   const { data: existingCredits, error: creditsError } = await supabase
@@ -256,6 +270,7 @@ async function addCreditsIfNotAlreadyGiven({
 
   if (creditsError) {
     console.error("Error reading user_credits:", creditsError);
+    return { ok: false, reason: "credits_read_failed" };
   }
 
   const currentCredits = existingCredits?.credits || 0;
@@ -271,7 +286,7 @@ async function addCreditsIfNotAlreadyGiven({
 
     if (updateCreditsError) {
       console.error("Error updating user_credits:", updateCreditsError);
-      return;
+      return { ok: false, reason: "credits_update_failed" };
     }
   } else {
     const { error: insertCreditsError } = await supabase
@@ -284,7 +299,7 @@ async function addCreditsIfNotAlreadyGiven({
 
     if (insertCreditsError) {
       console.error("Error inserting user_credits:", insertCreditsError);
-      return;
+      return { ok: false, reason: "credits_insert_failed" };
     }
   }
 
@@ -299,7 +314,16 @@ async function addCreditsIfNotAlreadyGiven({
 
   if (txError) {
     console.error("Error inserting credit_transactions:", txError);
+    return { ok: false, reason: "tx_insert_failed" };
   }
+
+  console.log("Credits added successfully:", {
+    userId,
+    creditsAdded: creditsToAdd,
+    txNote,
+  });
+
+  return { ok: true, reason: "credits_added" };
 }
 
 app.post("/razorpay-webhook", async (req, res) => {
@@ -325,7 +349,10 @@ app.post("/razorpay-webhook", async (req, res) => {
     }
 
     const event = JSON.parse(rawBody.toString("utf8"));
+    console.log("RAZORPAY EVENT RECEIVED =", JSON.stringify(event, null, 2));
+
     const ctx = getWebhookContext(event);
+    console.log("Extracted webhook context:", ctx);
 
     if (
       ctx.eventType === "subscription.activated" ||
@@ -334,13 +361,17 @@ app.post("/razorpay-webhook", async (req, res) => {
     ) {
       if (!ctx.userId || !ctx.planId || !ctx.subscriptionId) {
         console.error("Missing webhook context:", ctx);
-        return res.json({ status: "ignored" });
+        return res.json({ status: "ignored_missing_context" });
       }
 
-      await addCreditsIfNotAlreadyGiven(ctx);
+      const result = await addCreditsIfNotAlreadyGiven(ctx);
+      console.log("Credit processing result:", result);
+
+      return res.json({ status: "ok", result });
     }
 
-    return res.json({ status: "ok" });
+    console.log("Ignoring webhook event type:", ctx.eventType);
+    return res.json({ status: "ignored_event_type" });
   } catch (err) {
     console.error("Error in webhook:", err);
     return res.status(500).send("Webhook error");
