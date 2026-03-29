@@ -128,7 +128,7 @@ app.post("/create-subscription", async (req, res) => {
   }
 });
 
-function getWebhookContext(event) {
+async function getWebhookContext(event) {
   const payload = event.payload || {};
   const eventType = event.event;
 
@@ -142,20 +142,23 @@ function getWebhookContext(event) {
     invoiceEntity?.notes ||
     {};
 
-  const subscriptionId =
+  let subscriptionId =
     subscriptionEntity?.id ||
     paymentEntity?.subscription_id ||
     invoiceEntity?.subscription_id ||
     null;
 
-  const planId =
+  let planId =
     subscriptionEntity?.plan_id ||
     invoiceEntity?.line_items?.[0]?.plan_id ||
+    paymentEntity?.notes?.plan_id ||
     notes.plan_id ||
     null;
 
-  const userId =
-    notes.supabase_user_id || null;
+  let userId =
+    paymentEntity?.notes?.supabase_user_id ||
+    notes.supabase_user_id ||
+    null;
 
   let cycleStart = null;
   let cycleEnd = null;
@@ -184,6 +187,23 @@ function getWebhookContext(event) {
     invoiceEntity?.id ||
     paymentEntity?.id ||
     `${subscriptionId}:${eventType}:${cycleStart || "no-cycle"}`;
+
+  if (subscriptionId && (!userId || !planId)) {
+    const { data: subRow, error: subLookupError } = await supabase
+      .from("user_subscriptions")
+      .select("user_id, razorpay_plan_id")
+      .eq("razorpay_subscription_id", subscriptionId)
+      .maybeSingle();
+
+    if (subLookupError) {
+      console.error("Subscription lookup fallback error:", subLookupError);
+    }
+
+    if (subRow) {
+      if (!userId) userId = subRow.user_id;
+      if (!planId) planId = subRow.razorpay_plan_id;
+    }
+  }
 
   return {
     eventType,
@@ -351,7 +371,7 @@ app.post("/razorpay-webhook", async (req, res) => {
     const event = JSON.parse(rawBody.toString("utf8"));
     console.log("RAZORPAY EVENT RECEIVED =", JSON.stringify(event, null, 2));
 
-    const ctx = getWebhookContext(event);
+    const ctx = await getWebhookContext(event);
     console.log("Extracted webhook context:", ctx);
 
     if (
