@@ -11,9 +11,9 @@ const { GoogleGenAI } = require("@google/genai"); // Gemini
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Raw body ONLY for webhook verification
+// Razorpay webhook needs raw body
 app.use("/razorpay-webhook", bodyParser.raw({ type: "*/*" }));
-// Normal JSON body
+// Normal JSON body for all other routes
 app.use(express.json());
 app.use(cors());
 
@@ -23,7 +23,7 @@ const razorpayInstance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Supabase (admin client)
+// Supabase (service role)
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -80,6 +80,8 @@ app.post("/create-subscription", async (req, res) => {
       return res.status(400).json({ error: "User not logged in" });
     }
 
+    const planMeta = PLAN_CREDITS[plan_id] || { name: null, credits: 0 };
+
     // Create Razorpay subscription and store supabase_user_id + plan_id in notes
     const subscription = await razorpayInstance.subscriptions.create({
       plan_id,
@@ -92,8 +94,6 @@ app.post("/create-subscription", async (req, res) => {
     });
 
     // Store subscription info in user_subscriptions
-    const planMeta = PLAN_CREDITS[plan_id] || { name: null, credits: 0 };
-
     await supabase.from("user_subscriptions").insert({
       user_id: supabase_user_id,
       razorpay_subscription_id: subscription.id,
@@ -133,11 +133,11 @@ app.post("/razorpay-webhook", async (req, res) => {
     }
 
     const signature = req.headers["x-razorpay-signature"];
-    const body = req.body;
+    const rawBody = req.body; // Buffer from bodyParser.raw
 
     const expectedSignature = crypto
       .createHmac("sha256", webhookSecret)
-      .update(body)
+      .update(rawBody)
       .digest("hex");
 
     if (signature !== expectedSignature) {
@@ -145,7 +145,7 @@ app.post("/razorpay-webhook", async (req, res) => {
       return res.status(400).send("Invalid signature");
     }
 
-    const event = JSON.parse(body.toString());
+    const event = JSON.parse(rawBody.toString("utf8"));
     const eventType = event.event;
     const payload = event.payload || {};
 
