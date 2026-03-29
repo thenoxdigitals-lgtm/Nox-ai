@@ -18,7 +18,7 @@ app.use(cors());
 
 const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 const supabase = createClient(
@@ -27,7 +27,7 @@ const supabase = createClient(
 );
 
 const genAI = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 async function getUserFromToken(req) {
@@ -51,9 +51,9 @@ app.get("/", (req, res) => {
 });
 
 const PLAN_CREDITS = {
-  plan_SW4tX6wgjb7Xpv: { name: "monthly", credits: 200 },
-  plan_SW4troEOKKCe9T: { name: "yearly", credits: 250 },
-  plan_SW4uE4Hw33PD3K: { name: "3year", credits: 300 }
+  "plan_SW4tX6wgjb7Xpv": { name: "monthly", credits: 200 },
+  "plan_SW4troEOKKCe9T": { name: "yearly", credits: 250 },
+  "plan_SW4uE4Hw33PD3K": { name: "3year", credits: 300 },
 };
 
 app.post("/create-subscription", async (req, res) => {
@@ -79,8 +79,8 @@ app.post("/create-subscription", async (req, res) => {
       customer_notify: 1,
       notes: {
         supabase_user_id,
-        plan_id
-      }
+        plan_id,
+      },
     });
 
     const { error: subError } = await supabase
@@ -99,7 +99,7 @@ app.post("/create-subscription", async (req, res) => {
           current_cycle_ends_at: subscription.current_end
             ? new Date(subscription.current_end * 1000).toISOString()
             : null,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         },
         { onConflict: "razorpay_subscription_id" }
       );
@@ -112,7 +112,7 @@ app.post("/create-subscription", async (req, res) => {
       subscription_id: subscription.id,
       status: subscription.status,
       currency: subscription.currency || "INR",
-      description: "Nox AI subscription"
+      description: "Nox AI subscription",
     });
   } catch (err) {
     console.error("Error creating subscription:", err);
@@ -122,7 +122,7 @@ app.post("/create-subscription", async (req, res) => {
 
 app.post("/razorpay-webhook", async (req, res) => {
   try {
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const webhookSecret = process.env.jympXYi4jtW67WHY0Z04yUIK;
 
     if (!webhookSecret) {
       console.error("Missing RAZORPAY_WEBHOOK_SECRET in environment");
@@ -189,7 +189,7 @@ app.post("/razorpay-webhook", async (req, res) => {
             current_cycle_ends_at: subscriptionObj.current_end
               ? new Date(subscriptionObj.current_end * 1000).toISOString()
               : null,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           },
           { onConflict: "razorpay_subscription_id" }
         );
@@ -216,7 +216,7 @@ app.post("/razorpay-webhook", async (req, res) => {
             .from("user_credits")
             .update({
               credits: currentCredits + creditsToAdd,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
             })
             .eq("user_id", supabaseUserId);
 
@@ -228,7 +228,7 @@ app.post("/razorpay-webhook", async (req, res) => {
             .from("user_credits")
             .insert({
               user_id: supabaseUserId,
-              credits: creditsToAdd
+              credits: creditsToAdd,
             });
 
           if (insertCreditsError) {
@@ -242,7 +242,7 @@ app.post("/razorpay-webhook", async (req, res) => {
             user_id: supabaseUserId,
             amount: creditsToAdd,
             type: "plan_credit",
-            note: `Credits added for ${planMeta?.name || "subscription"} plan`
+            note: `Credits added for ${planMeta?.name || "subscription"} plan`,
           });
 
         if (txError) {
@@ -302,11 +302,11 @@ app.post("/api/generate-site", async (req, res) => {
                 "You are a website generator. Output ONLY complete HTML code with <html>, <head>, <body> " +
                 "and include Tailwind CSS CDN. No explanations, no markdown. " +
                 "Generate a responsive website for this request: " +
-                prompt
-            }
-          ]
-        }
-      ]
+                prompt,
+            },
+          ],
+        },
+      ],
     });
 
     console.log("GEMINI RAW RESULT =", JSON.stringify(result, null, 2));
@@ -315,11 +315,7 @@ app.post("/api/generate-site", async (req, res) => {
     try {
       if (result && typeof result.text === "function") {
         html = result.text();
-      } else if (
-        result &&
-        result.response &&
-        typeof result.response.text === "function"
-      ) {
+      } else if (result && result.response && typeof result.response.text === "function") {
         html = result.response.text();
       } else if (
         result &&
@@ -337,14 +333,14 @@ app.post("/api/generate-site", async (req, res) => {
     }
 
     if (!html || !html.trim()) {
-      return res.status(500).json({
-        error: "AI returned empty or unreadable HTML. Try a different prompt."
-      });
+      return res
+        .status(500)
+        .json({ error: "AI returned empty or unreadable HTML. Try a different prompt." });
     }
 
     return res.json({
       html: html.trim(),
-      credits_remaining: creditsRemaining
+      credits_remaining: creditsRemaining,
     });
   } catch (err) {
     console.error("generate-site error:", err);
