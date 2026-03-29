@@ -6,35 +6,30 @@ const bodyParser = require("body-parser");
 const Razorpay = require("razorpay");
 const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
-const { GoogleGenAI } = require("@google/genai"); // Gemini
+const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Razorpay webhook needs raw body
 app.use("/razorpay-webhook", bodyParser.raw({ type: "*/*" }));
-// Normal JSON body for all other routes
 app.use(express.json());
 app.use(cors());
 
-// Razorpay client
 const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Supabase (service role)
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// Gemini client (Google AI)
 const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-// Helper: get Supabase user from JWT sent by frontend
 async function getUserFromToken(req) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ")
@@ -51,23 +46,16 @@ async function getUserFromToken(req) {
   return data.user;
 }
 
-// Health check
 app.get("/", (req, res) => {
   res.send("Nox backend is running");
 });
 
-// Plan → credits mapping (match PRICING.HTML plan IDs)
 const PLAN_CREDITS = {
-  // 1 month
   "plan_SW4tX6wgjb7Xpv": { name: "monthly", credits: 200 },
-  // 12 months
   "plan_SW4troEOKKCe9T": { name: "yearly", credits: 250 },
-  // 3 years
   "plan_SW4uE4Hw33PD3K": { name: "3year", credits: 300 },
 };
 
-// ========== 1) CREATE SUBSCRIPTION ==========
-// Called from frontend pricing page
 app.post("/create-subscription", async (req, res) => {
   try {
     const { plan_id, supabase_user_id } = req.body;
@@ -81,15 +69,13 @@ app.post("/create-subscription", async (req, res) => {
     }
 
     const planMeta = PLAN_CREDITS[plan_id];
-
     if (!planMeta) {
       return res.status(400).json({ error: "Unknown plan_id" });
     }
 
-    // Create Razorpay subscription and store supabase_user_id + plan_id in notes
     const subscription = await razorpayInstance.subscriptions.create({
       plan_id,
-      total_count: 120, // many cycles; cancel manually if needed
+      total_count: 120,
       customer_notify: 1,
       notes: {
         supabase_user_id,
@@ -97,7 +83,6 @@ app.post("/create-subscription", async (req, res) => {
       },
     });
 
-    // Upsert subscription info into user_subscriptions so we don't duplicate rows
     const { error: subError } = await supabase
       .from("user_subscriptions")
       .upsert(
@@ -135,8 +120,6 @@ app.post("/create-subscription", async (req, res) => {
   }
 });
 
-// ========== 2) RAZORPAY WEBHOOK ==========
-// Razorpay will call this after subscription activation / charge
 app.post("/razorpay-webhook", async (req, res) => {
   try {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -147,7 +130,7 @@ app.post("/razorpay-webhook", async (req, res) => {
     }
 
     const signature = req.headers["x-razorpay-signature"];
-    const rawBody = req.body; // Buffer from bodyParser.raw
+    const rawBody = req.body;
 
     const expectedSignature = crypto
       .createHmac("sha256", webhookSecret)
@@ -163,7 +146,6 @@ app.post("/razorpay-webhook", async (req, res) => {
     const eventType = event.event;
     const payload = event.payload || {};
 
-    // Handle subscription activation / recurring charge
     if (
       eventType === "subscription.activated" ||
       eventType === "subscription.charged"
@@ -191,7 +173,6 @@ app.post("/razorpay-webhook", async (req, res) => {
 
       const creditsToAdd = planMeta?.credits || 0;
 
-      // Update user_subscriptions row
       const { error: upsertError } = await supabase
         .from("user_subscriptions")
         .upsert(
@@ -217,7 +198,6 @@ app.post("/razorpay-webhook", async (req, res) => {
         console.error("Error upserting user_subscriptions in webhook:", upsertError);
       }
 
-      // Add credits to user_credits
       if (creditsToAdd > 0) {
         const { data: existingCredits, error: creditsError } = await supabase
           .from("user_credits")
@@ -256,7 +236,6 @@ app.post("/razorpay-webhook", async (req, res) => {
           }
         }
 
-        // Insert into credit_transactions
         const { error: txError } = await supabase
           .from("credit_transactions")
           .insert({
@@ -279,7 +258,6 @@ app.post("/razorpay-webhook", async (req, res) => {
   }
 });
 
-// ========== 3) GEMINI GENERATION ENDPOINT ==========
 app.post("/api/generate-site", async (req, res) => {
   try {
     const user = await getUserFromToken(req);
@@ -292,7 +270,6 @@ app.post("/api/generate-site", async (req, res) => {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
-    // still using your existing RPC (profiles-based credits)
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       "consume_credit_and_increment",
       { p_user_id: user.id }
