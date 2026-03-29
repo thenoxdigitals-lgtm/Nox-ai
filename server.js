@@ -8,29 +8,28 @@ const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
 const { GoogleGenAI } = require("@google/genai"); // Gemini
 
-// --- Setup basic app ---
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// We need raw body ONLY for webhook verification
+// Raw body ONLY for webhook verification
 app.use("/razorpay-webhook", bodyParser.raw({ type: "*/*" }));
-// For normal JSON body
+// Normal JSON body
 app.use(express.json());
 app.use(cors());
 
-// --- Setup Razorpay client ---
+// Razorpay client
 const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// --- Setup Supabase (admin client) ---
+// Supabase (admin client)
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// --- Setup Gemini client (Google AI Studio) ---
+// Gemini client (Google AI)
 const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
@@ -52,12 +51,21 @@ async function getUserFromToken(req) {
   return data.user;
 }
 
-// Simple health check
+// Health check
 app.get("/", (req, res) => {
   res.send("Nox backend is running");
 });
 
-// ========== 1) CREATE SUBSCRIPTION ENDPOINT ==========
+// Plan → credits mapping
+const PLAN_CREDITS = {
+  // use your real Razorpay plan IDs here:
+  "plan_SVRRQoK3FvsFY2": { name: "monthly", credits: 200 },
+  "plan_SVRSPwR7DTzHEH": { name: "yearly", credits: 250 },
+  "plan_SVRTWBZ5tiA87t": { name: "3year", credits: 300 },
+};
+
+// ========== 1) CREATE SUBSCRIPTION ==========
+// Called from frontend pricing page
 app.post("/create-subscription", async (req, res) => {
   try {
     const { plan_id, supabase_user_id } = req.body;
@@ -70,19 +78,33 @@ app.post("/create-subscription", async (req, res) => {
       return res.status(400).json({ error: "User not logged in" });
     }
 
+    // Create Razorpay subscription and store supabase_user_id + plan_id in notes
     const subscription = await razorpayInstance.subscriptions.create({
-      plan_id: plan_id,
-      total_count: 1,
+      plan_id,
+      total_count: 120, // many cycles; cancel manually if needed
+      customer_notify: 1,
       notes: {
-        supabase_user_id: supabase_user_id,
+        supabase_user_id,
+        plan_id,
       },
     });
 
-    await supabase.from("subscriptions").insert({
-      supabase_user_id,
+    // Store subscription info in user_subscriptions
+    const planMeta = PLAN_CREDITS[plan_id] || { name: null, credits: 0 };
+
+    await supabase.from("user_subscriptions").insert({
+      user_id: supabase_user_id,
       razorpay_subscription_id: subscription.id,
-      plan_id,
+      razorpay_plan_id: plan_id,
+      plan_name: planMeta.name,
+      credits_per_cycle: planMeta.credits,
       status: subscription.status,
+      current_cycle_started_at: subscription.current_start
+        ? new Date(subscription.current_start * 1000).toISOString()
+        : null,
+      current_cycle_ends_at: subscription.current_end
+        ? new Date(subscription.current_end * 1000).toISOString()
+        : null,
     });
 
     return res.json({
@@ -97,7 +119,8 @@ app.post("/create-subscription", async (req, res) => {
   }
 });
 
-// ========== 2) RAZORPAY WEBHOOK ENDPOINT ==========
+// ========== 2) RAZORPAY WEBHOOK ==========
+// Razorpay will call this after subscription activation / charge
 app.post("/razorpay-webhook", async (req, res) => {
   try {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -124,50 +147,94 @@ app.post("/razorpay-webhook", async (req, res) => {
     const eventType = event.event;
     const payload = event.payload || {};
 
+    // We care about subscription activated/charged (first payment and renewals)
     if (
       eventType === "subscription.activated" ||
       eventType === "subscription.charged"
     ) {
-      const subscriptionObj = payload.subscription.entity;
+      const subscriptionObj = payload.subscription?.entity;
+      if (!subscriptionObj) {
+        console.error("No subscription entity in webhook payload");
+        return res.json({ status: "ignored" });
+      }
+
       const razorpaySubscriptionId = subscriptionObj.id;
       const notes = subscriptionObj.notes || {};
       const supabaseUserId = notes.supabase_user_id;
+      const razorpayPlanId = subscriptionObj.plan_id || notes.plan_id;
 
-      if (supabaseUserId) {
-        let creditsToAdd = 0;
+      if (!supabaseUserId || !razorpayPlanId) {
+        console.error("Missing supabase_user_id or plan_id in subscription notes");
+        return res.json({ status: "ignored" });
+      }
 
-        if (subscriptionObj.plan_id === "plan_SVRRQoK3FvsFY2") {
-          creditsToAdd = 200; // ₹199 plan
-        } else if (subscriptionObj.plan_id === "plan_SVRSPwR7DTzHEH") {
-          creditsToAdd = 250; // yearly
-        } else if (subscriptionObj.plan_id === "plan_SVRTWBZ5tiA87t") {
-          creditsToAdd = 300; // 3 years
-        }
+      const planMeta = PLAN_CREDITS[razorpayPlanId];
+      if (!planMeta) {
+        console.error("No PLAN_CREDITS mapping for plan:", razorpayPlanId);
+      }
 
-        await supabase
-          .from("subscriptions")
-          .update({
+      const creditsToAdd = planMeta?.credits || 0;
+
+      // Update user_subscriptions row
+      await supabase
+        .from("user_subscriptions")
+        .upsert(
+          {
+            user_id: supabaseUserId,
+            razorpay_subscription_id: razorpaySubscriptionId,
+            razorpay_plan_id: razorpayPlanId,
+            plan_name: planMeta?.name || null,
+            credits_per_cycle: creditsToAdd,
             status: subscriptionObj.status,
-          })
-          .eq("razorpay_subscription_id", razorpaySubscriptionId);
+            current_cycle_started_at: subscriptionObj.current_start
+              ? new Date(subscriptionObj.current_start * 1000).toISOString()
+              : null,
+            current_cycle_ends_at: subscriptionObj.current_end
+              ? new Date(subscriptionObj.current_end * 1000).toISOString()
+              : null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "razorpay_subscription_id" }
+        );
 
-        if (creditsToAdd > 0) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("credits_remaining")
-            .eq("id", supabaseUserId)
-            .single();
+      // Add credits to user_credits
+      if (creditsToAdd > 0) {
+        const { data: existingCredits, error: creditsError } = await supabase
+          .from("user_credits")
+          .select("credits")
+          .eq("user_id", supabaseUserId)
+          .maybeSingle();
 
-          const currentCredits = profile?.credits_remaining || 0;
-
-          await supabase
-            .from("profiles")
-            .update({
-              credits_remaining: currentCredits + creditsToAdd,
-              current_plan: subscriptionObj.plan_id,
-            })
-            .eq("id", supabaseUserId);
+        if (creditsError) {
+          console.error("Error reading user_credits:", creditsError);
         }
+
+        const currentCredits = existingCredits?.credits || 0;
+
+        if (existingCredits) {
+          await supabase
+            .from("user_credits")
+            .update({
+              credits: currentCredits + creditsToAdd,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", supabaseUserId);
+        } else {
+          await supabase
+            .from("user_credits")
+            .insert({
+              user_id: supabaseUserId,
+              credits: creditsToAdd,
+            });
+        }
+
+        // Insert into credit_transactions
+        await supabase.from("credit_transactions").insert({
+          user_id: supabaseUserId,
+          amount: creditsToAdd,
+          type: "plan_credit",
+          note: `Credits added for ${planMeta?.name || "subscription"} plan`,
+        });
       }
     }
 
@@ -191,6 +258,7 @@ app.post("/api/generate-site", async (req, res) => {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
+    // still using your existing RPC (profiles-based credits)
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       "consume_credit_and_increment",
       { p_user_id: user.id }
@@ -269,7 +337,6 @@ app.post("/api/generate-site", async (req, res) => {
   }
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Nox backend listening on port ${PORT}`);
 });
